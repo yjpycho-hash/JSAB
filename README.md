@@ -26,7 +26,7 @@ A rhythm-based dodge-'em-up game built with vanilla HTML5 Canvas and JavaScript.
 
 ## How to Run
 
-Open `index.html` in any modern web browser. No server or build tools required.
+Open `JustShapesAndBeats.html` in any modern web browser. No server or build tools required.
 
 ## Controls
 
