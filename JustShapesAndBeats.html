@@ -42,7 +42,7 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
 .level-card .name{font-size:11px;color:#fff;margin-bottom:8px}
 .level-card .stars{font-size:10px;color:#ff2a75;margin-bottom:6px}
 .level-card .lock{font-size:20px;margin-top:5px}
-.menu-shape{position:absolute;opacity:0.3;pointer-events:none}
+.menu-shape{position:absolute;pointer-events:none;opacity:0.15}
 .hud{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
 .hud-top{position:absolute;top:10px;width:100%;display:flex;justify-content:space-between;padding:0 14px}
 .health-row{display:flex;gap:4px;align-items:center}
@@ -2036,12 +2036,12 @@ class Game {
     if(this.difficulty==='normal')return{
       speed:0.7,count:0.65,pspeed:0.65,bossHP:0.5,playerHP:5,playerSpeed:1.15,
       psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,chaserLifetime:5,
-      sprinklerRate:1.4,sprinklerRot:0.7
+      sprinklerRate:1.5,sprinklerRot:0.6
     };
     if(this.difficulty==='nightmare')return{
       speed:1.4,count:1.7,pspeed:1.5,bossHP:2,playerHP:2,playerSpeed:0.85,
       psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,chaserLifetime:12,
-      sprinklerRate:0.65,sprinklerRot:1.5
+      sprinklerRate:0.5,sprinklerRot:1.7
     };
     return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1,
       psize:1,bossRate:1,bossCount:1,extraEvents:0,chaserLifetime:8,
@@ -2095,11 +2095,55 @@ class Game {
         if(ev.rotSpeed)ev.rotSpeed*=mul.sprinklerRot;
       }
     }
+    // More sprinklers on harder diffs
+    if(this.difficulty==='hard'||this.difficulty==='nightmare'){
+      const extraSprinklers=[];
+      for(const ev of this.level.events){
+        if(ev.type==='sprinkler'){
+          const copies=this.difficulty==='nightmare'?2:1;
+          for(let i=0;i<copies;i++){
+            const dup={...ev};
+            dup.time=ev.time+0.6*(i+1);
+            dup.sprayInterval=(ev.sprayInterval||0.35)*0.9;
+            dup.duration=(ev.duration||5)*0.7;
+            if(dup.time>this.level.duration)break;
+            extraSprinklers.push(dup);
+          }
+        }
+      }
+      newEvents.push(...extraSprinklers);
+    }
     this.level.events.push(...newEvents);
     this.level.events.sort((a,b)=>a.time-b.time);
   }
 
   renderMenuShapes(){
+    const wrapper=document.getElementById('menuOverlay');
+    if(wrapper.querySelectorAll('.menu-shape').length)return;
+    for(let i=0;i<12;i++){
+      const div=document.createElement('div');
+      div.className='menu-shape';
+      const sz=rand(20,60);
+      div.style.cssText=`
+        width:${sz}px;height:${sz}px;
+        left:${rand(5,95)}%;top:${rand(10,90)}%;
+        background:${['#00e5ff','#ff2a75','#ff8c00','#fff'][randInt(0,3)]};
+        border-radius:${Math.random()>0.5?'0':'50%'};
+        animation:float${randInt(1,3)} ${rand(3,6)}s ease-in-out infinite;
+        animation-delay:${rand(0,2)}s;
+      `;
+      wrapper.appendChild(div);
+    }
+    if(!document.getElementById('floatKeyframes')){
+      const st=document.createElement('style');
+      st.id='floatKeyframes';
+      st.textContent=`
+        @keyframes float1{0%,100%{transform:translateY(0)}50%{transform:translateY(-30px)}}
+        @keyframes float2{0%,100%{transform:translateY(0)}50%{transform:translateY(20px)}}
+        @keyframes float3{0%,100%{transform:translateX(0)}50%{transform:translateX(20px)}}
+      `;
+      document.head.appendChild(st);
+    }
   }
 
   async startLevel(levelId){
