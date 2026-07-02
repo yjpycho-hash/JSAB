@@ -1222,7 +1222,7 @@ class Chaser {
     this.spawnTime=data.spawnTime||data.time||0;
     this.color='#ff2a75';
     this.hasHit=false;
-    this.lifetime=data.lifetime||15;
+    this.lifetime=data.lifetime||7;
     this.age=0;
     this.telegraph=data.createGhost!==false;
   }
@@ -1349,8 +1349,12 @@ class Sprinkler {
     if(!this.active)return;
     this.age+=dt;
     if(this.age>this.duration){this.active=false;return;}
-    this.x+=Math.cos(this.angle)*this.moveSpeed*dt;
-    this.y+=Math.sin(this.angle)*this.moveSpeed*dt;
+    const dx=400-this.x,dy=300-this.y;
+    const dist=Math.hypot(dx,dy);
+    if(dist>5){
+      this.x+=dx/dist*this.moveSpeed*dt;
+      this.y+=dy/dist*this.moveSpeed*dt;
+    }
     this.angle+=this.rotSpeed*dt;
     const last=Math.floor((this.age-dt)/this.sprayInterval);
     const curr=Math.floor(this.age/this.sprayInterval);
@@ -2035,16 +2039,16 @@ class Game {
   getDifficultyMul(){
     if(this.difficulty==='normal')return{
       speed:0.7,count:0.65,pspeed:0.65,bossHP:0.5,playerHP:5,playerSpeed:1.15,
-      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,chaserLifetime:5,
+      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,
       sprinklerRate:1.5,sprinklerRot:0.6
     };
     if(this.difficulty==='nightmare')return{
       speed:1.4,count:1.7,pspeed:1.5,bossHP:2,playerHP:2,playerSpeed:0.85,
-      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,chaserLifetime:12,
+      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,
       sprinklerRate:0.5,sprinklerRot:1.7
     };
     return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1,
-      psize:1,bossRate:1,bossCount:1,extraEvents:0,chaserLifetime:8,
+      psize:1,bossRate:1,bossCount:1,extraEvents:0,
       sprinklerRate:1,sprinklerRot:1};
   }
 
@@ -2082,12 +2086,6 @@ class Game {
       }
       if(ev.type==='wall'&&ev.speed)ev.speed=Math.round(ev.speed*mul.speed);
     }
-    // Chaser lifetime by difficulty
-    for(const ev of this.level.events){
-      if(ev.type==='chaser'){
-        ev.lifetime=mul.chaserLifetime;
-      }
-    }
     // Sprinkler rate and rotation by difficulty
     for(const ev of this.level.events){
       if(ev.type==='sprinkler'){
@@ -2095,9 +2093,9 @@ class Game {
         if(ev.rotSpeed)ev.rotSpeed*=mul.sprinklerRot;
       }
     }
-    // More sprinklers on harder diffs
+    // More hazards on harder diffs
     if(this.difficulty==='hard'||this.difficulty==='nightmare'){
-      const extraSprinklers=[];
+      const extra=[];
       for(const ev of this.level.events){
         if(ev.type==='sprinkler'){
           const copies=this.difficulty==='nightmare'?2:1;
@@ -2107,11 +2105,20 @@ class Game {
             dup.sprayInterval=(ev.sprayInterval||0.35)*0.9;
             dup.duration=(ev.duration||5)*0.7;
             if(dup.time>this.level.duration)break;
-            extraSprinklers.push(dup);
+            extra.push(dup);
+          }
+        }
+        if(ev.type==='chaser'){
+          const copies=this.difficulty==='nightmare'?2:1;
+          for(let i=0;i<copies;i++){
+            const dup={...ev};
+            dup.time=ev.time+0.5*(i+1);
+            if(dup.time>this.level.duration)break;
+            extra.push(dup);
           }
         }
       }
-      newEvents.push(...extraSprinklers);
+      newEvents.push(...extra);
     }
     this.level.events.push(...newEvents);
     this.level.events.sort((a,b)=>a.time-b.time);
