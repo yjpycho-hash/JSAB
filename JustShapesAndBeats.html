@@ -471,6 +471,85 @@ const LEVELS = {
       {time:58.5,type:'wave',direction:'down',duration:2},
       {time:59.5,type:'spawn',shape:'circle',x:400,y:300,vx:200,vy:0,radius:8,spawn_count:24,spread_angle:360}
     ]
+  },
+  level3:{
+    id:'level3',name:'The Pursuit',duration:70,bpm:140,
+    checkpoints:[14,28,42,56],bgColor:'#1a1a2e',playerColor:'#00e5ff',enemyColor:'#9b30ff',
+    melodyNotes:['E4','G4','B4','D5','E4','G4','B4','D5'],
+    difficulty:4,
+    events:[
+      // ===== Phase 1: Warmup with chasers (0-14s) =====
+      {time:2.0,type:'beam',x1:0,y1:300,x2:800,y2:300,width:14,duration:2},
+      {time:3.5,type:'spawn',shape:'circle',x:200,y:-30,vx:20,vy:200,radius:7,spawn_count:6,spread_angle:45},
+      {time:3.5,type:'spawn',shape:'circle',x:600,y:-30,vx:-20,vy:200,radius:7,spawn_count:6,spread_angle:45},
+      {time:5.0,type:'chaser',x:100,y:50},
+      {time:6.0,type:'chaser',x:700,y:50},
+      {time:7.0,type:'wall',direction:'left',speed:65,thickness:25,gaps:[{y:150,height:70},{y:400,height:70}],duration:3},
+      {time:9.0,type:'spawn',shape:'circle',x:0,y:200,vx:190,vy:0,radius:6,spawn_count:6,spread_angle:35},
+      {time:9.0,type:'spawn',shape:'circle',x:800,y:400,vx:-190,vy:0,radius:6,spawn_count:6,spread_angle:35},
+      {time:10.5,type:'chaser',x:400,y:-30},
+      {time:12.0,type:'ring',centerX:400,centerY:300,maxRadius:270,thickness:15,pulseDuration:2.2,pauseDuration:0.8},
+
+      // ===== Phase 2: Chaser + hazard mix (14-28s) =====
+      {time:14.5,type:'wave',direction:'right',duration:1.8},
+      {time:15.5,type:'spawn',shape:'circle',x:400,y:630,vx:0,vy:-230,radius:7,spawn_count:10,spread_angle:70},
+      {time:17.0,type:'chaser',x:100,y:550},{time:17.3,type:'chaser',x:700,y:550},
+      {time:18.5,type:'beam',x1:200,y1:0,x2:200,y2:600,width:12,duration:2},
+      {time:19.5,type:'beam',x1:600,y1:0,x2:600,y2:600,width:12,duration:2},
+      {time:20.5,type:'spawn',shape:'circle',x:0,y:300,vx:200,vy:0,radius:6,spawn_count:8,spread_angle:40},
+      {time:20.5,type:'spawn',shape:'circle',x:800,y:300,vx:-200,vy:0,radius:6,spawn_count:8,spread_angle:40},
+      {time:22.0,type:'chaser',x:200,y:-30},{time:22.3,type:'chaser',x:600,y:-30},
+      {time:23.5,type:'wall',direction:'up',speed:70,thickness:25,gaps:[{x:200,width:60},{x:500,width:60}],duration:3},
+      {time:25.0,type:'spawn',shape:'circle',x:100,y:-30,vx:30,vy:220,radius:6,spawn_count:8,spread_angle:55},
+      {time:25.0,type:'spawn',shape:'circle',x:700,y:-30,vx:-30,vy:220,radius:6,spawn_count:8,spread_angle:55},
+      {time:26.5,type:'chaser',x:50,y:300},{time:27.0,type:'chaser',x:750,y:300},
+
+      // ===== Phase 3: Boss fight (28-56s) =====
+      {time:28.0,type:'boss',x:400,y:150,hp:28,phases:[
+        {pattern:'spiral',duration:6,projectileSpeed:140,spawnRate:0.28},
+        {pattern:'burst',duration:6,projectileSpeed:130,count:16,spread:360,bursts:7},
+        {pattern:'grid',duration:5,speed:110,rows:5,cols:5},
+        {pattern:'burst',duration:6,projectileSpeed:150,count:18,spread:360,bursts:8},
+        {pattern:'spiral',duration:5,projectileSpeed:160,spawnRate:0.22}
+      ]},
+      {time:29.0,type:'chaser',x:400,y:580},{time:29.5,type:'chaser',x:200,y:580},
+      {time:31.0,type:'chaser',x:600,y:580},{time:31.5,type:'chaser',x:50,y:580},
+      {time:32.0,type:'spawn',shape:'circle',x:0,y:150,vx:180,vy:0,radius:6,spawn_count:6,spread_angle:35},
+      {time:32.0,type:'spawn',shape:'circle',x:800,y:450,vx:-180,vy:0,radius:6,spawn_count:6,spread_angle:35},
+      {time:33.5,type:'wave',direction:'left',duration:1.5},
+      {time:35.0,type:'chaser',x:100,y:50},{time:35.5,type:'chaser',x:700,y:50},
+      {time:36.5,type:'spawn',shape:'circle',x:400,y:-30,vx:0,vy:240,radius:7,spawn_count:10,spread_angle:75},
+      {time:38.0,type:'beam',x1:0,y1:200,x2:800,y2:200,width:14,duration:2},
+      {time:39.5,type:'chaser',x:300,y:580},{time:40.0,type:'chaser',x:500,y:580},
+      {time:41.0,type:'ring',centerX:400,centerY:300,maxRadius:290,thickness:16,pulseDuration:1.8,pauseDuration:0.5},
+      {time:42.5,type:'wall',direction:'right',speed:75,thickness:28,gaps:[{y:180,height:60},{y:430,height:60}],duration:3},
+      {time:44.0,type:'spawn',shape:'circle',x:0,y:400,vx:210,vy:0,radius:7,spawn_count:8,spread_angle:45},
+      {time:44.0,type:'spawn',shape:'circle',x:800,y:200,vx:-210,vy:0,radius:7,spawn_count:8,spread_angle:45},
+      {time:45.5,type:'chaser',x:50,y:100},{time:46.0,type:'chaser',x:750,y:500},
+      {time:47.0,type:'beam',x1:400,y1:0,x2:400,y2:600,width:16,duration:2.5,movement:{type:'sine',amplitude:100,frequency:0.6}},
+      {time:48.5,type:'spawn',shape:'circle',x:200,y:-30,vx:20,vy:250,radius:7,spawn_count:10,spread_angle:65},
+      {time:48.5,type:'spawn',shape:'circle',x:600,y:-30,vx:-20,vy:250,radius:7,spawn_count:10,spread_angle:65},
+      {time:50.0,type:'chaser',x:200,y:50},{time:50.5,type:'chaser',x:600,y:50},
+      {time:52.0,type:'wave',direction:'up',duration:1.5},
+      {time:53.5,type:'spawn',shape:'circle',x:400,y:630,vx:0,vy:-260,radius:8,spawn_count:14,spread_angle:85},
+      {time:54.5,type:'chaser',x:50,y:300},{time:55.0,type:'chaser',x:750,y:300},
+
+      // ===== Phase 4: Finale (56-70s) =====
+      {time:56.0,type:'beam',x1:0,y1:150,x2:800,y2:150,width:18,duration:2.5},
+      {time:57.5,type:'chaser',x:100,y:50},{time:57.8,type:'chaser',x:700,y:50},
+      {time:58.0,type:'wall',direction:'down',speed:85,thickness:28,gaps:[{x:200,width:60},{x:500,width:60}],duration:3.5},
+      {time:59.0,type:'chaser',x:400,y:580},
+      {time:60.0,type:'spawn',shape:'circle',x:0,y:300,vx:220,vy:0,radius:7,spawn_count:12,spread_angle:50},
+      {time:60.0,type:'spawn',shape:'circle',x:800,y:300,vx:-220,vy:0,radius:7,spawn_count:12,spread_angle:50},
+      {time:61.5,type:'chaser',x:300,y:-30},{time:62.0,type:'chaser',x:500,y:-30},
+      {time:63.0,type:'wave',direction:'right',duration:2},
+      {time:64.5,type:'spawn',shape:'circle',x:200,y:-30,vx:20,vy:260,radius:8,spawn_count:12,spread_angle:70},
+      {time:64.5,type:'spawn',shape:'circle',x:600,y:-30,vx:-20,vy:260,radius:8,spawn_count:12,spread_angle:70},
+      {time:66.0,type:'chaser',x:50,y:100},{time:66.5,type:'chaser',x:750,y:500},
+      {time:67.5,type:'beam',x1:0,y1:300,x2:800,y2:300,width:20,duration:2.5},
+      {time:69.0,type:'spawn',shape:'circle',x:400,y:300,vx:220,vy:0,radius:8,spawn_count:24,spread_angle:360},
+      {time:69.5,type:'chaser',x:400,y:580}
+    ]
   }
 };
 
@@ -1116,6 +1195,70 @@ class Wave {
       }
       ctx.stroke();
     }
+    ctx.restore();
+  }
+}
+
+// ============================================================
+// CHASER CLASS - slow enemy that follows the player
+// ============================================================
+class Chaser {
+  constructor(data){
+    this.x=data.x||400;this.y=data.y||100;
+    this.size=22;
+    this.speed=data.speed||300;
+    this.active=true;
+    this.spawnTime=data.spawnTime||data.time||0;
+    this.color='#ff2a75';
+    this.hasHit=false;
+  }
+  update(dt,songTime,players){
+    if(!this.active||this.hasHit)return;
+    let closest=null,minDist=Infinity;
+    for(const p of players){
+      if(!p.alive||p.dead)continue;
+      const d=Math.hypot(p.x-this.x,p.y-this.y);
+      if(d<minDist){minDist=d;closest=p;}
+    }
+    if(!closest)return;
+    const dx=closest.x-this.x,dy=closest.y-this.y;
+    const n=Math.hypot(dx,dy)||1;
+    this.x+=dx/n*this.speed*dt;
+    this.y+=dy/n*this.speed*dt;
+  }
+  collidesWith(player){
+    if(!this.active||this.hasHit)return false;
+    const d=Math.hypot(this.x-player.x,this.y-player.y);
+    if(d<(this.size+30)/2){
+      this.hasHit=true;
+      this.active=false;
+      return true;
+    }
+    return false;
+  }
+  draw(ctx){
+    if(!this.active||this.hasHit)return;
+    ctx.save();
+    const s=this.size;
+    ctx.shadowColor=this.color;
+    ctx.shadowBlur=18;
+    ctx.fillStyle=this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.x,this.y-s);
+    ctx.lineTo(this.x+s,this.y);
+    ctx.lineTo(this.x,this.y+s);
+    ctx.lineTo(this.x-s,this.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(this.x,this.y-s*0.5);
+    ctx.lineTo(this.x+s*0.5,this.y);
+    ctx.lineTo(this.x,this.y+s*0.5);
+    ctx.lineTo(this.x-s*0.5,this.y);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 }
@@ -1987,6 +2130,7 @@ class Game {
       if(h instanceof Wall)return h.active||h.isTelegraph(songTime);
       if(h instanceof PulsingRing)return h.active||h.isTelegraph(songTime);
       if(h instanceof Wave)return h.active||h.isTelegraph(songTime);
+      if(h instanceof Chaser)return h.active;
       return true;
     });
 
@@ -2093,6 +2237,10 @@ class Game {
       }
       case'wave':{
         this.hazards.push(new Wave({...ev,time:ev.time,createGhost:true}));
+        break;
+      }
+      case'chaser':{
+        this.hazards.push(new Chaser({...ev,spawnTime:ev.time}));
         break;
       }
       case'boss':{
