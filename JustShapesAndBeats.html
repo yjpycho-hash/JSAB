@@ -1923,6 +1923,8 @@ class Game {
     this.songTime=0;
     this.pauseTime=0;
     this.difficulty='normal';
+    this.authToken=localStorage.getItem('jsab_token')||null;
+    this.authUsername=localStorage.getItem('jsab_username')||'';
     this.customMul={playerSpeed:100,projSpeed:100,projCount:100,enemySpeed:100,projSize:100,bossHP:100,bossRate:100,bossCount:100,sprinklerRate:100,sprinklerRot:100,playerHP:3};
     const saved=localStorage.getItem('jsab_progress');
     if(saved){try{const d=JSON.parse(saved);if(d.completedLevels)this.completedLevels=d.completedLevels;if(d.unlockedLevels)this.unlockedLevels=d.unlockedLevels}catch(e){}}
@@ -1958,6 +1960,56 @@ class Game {
     this.resizeGame();
     window.addEventListener('resize',()=>this.resizeGame());
     this.showMenu();
+    if(this.authToken)this.verifyToken();
+  }
+
+  // --- Server API ---
+  async apiCall(path,opts={}){
+    const h={'Content-Type':'application/json'};
+    if(this.authToken)h['Authorization']='Bearer '+this.authToken;
+    try{
+      const r=await fetch(path,{...opts,headers:{...h,...opts.headers}});
+      const d=await r.json();
+      if(r.ok)return d;
+      if(d.code==='TOKEN_STALE'){this.logout();this.showMenu()}
+      throw new Error(d.error||'API error');
+    }catch(e){throw e}
+  }
+  async syncProgressFromServer(){
+    if(!this.authToken)return;
+    try{
+      const d=await this.apiCall('/api/progress');
+      if(d.completedLevels)Object.assign(this.completedLevels,d.completedLevels);
+      if(d.unlockedLevels)Object.assign(this.unlockedLevels,d.unlockedLevels);
+      localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
+    }catch(e){}
+  }
+  async saveProgressToServer(){
+    if(!this.authToken)return;
+    try{await this.apiCall('/api/progress',{method:'POST',body:JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels})})}catch(e){}
+  }
+  async verifyToken(){
+    try{
+      const d=await this.apiCall('/api/verify');
+      if(d.username){
+        this.authUsername=d.username;
+        localStorage.setItem('jsab_username',d.username);
+        document.getElementById('accountBtn').textContent='Signed in as '+d.username;
+        document.getElementById('accountLogoutBtn').style.display='inline-block';
+        if(d.progress){
+          if(d.progress.completedLevels)Object.assign(this.completedLevels,d.progress.completedLevels);
+          if(d.progress.unlockedLevels)Object.assign(this.unlockedLevels,d.progress.unlockedLevels);
+          localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
+        }
+      }
+    }catch(e){this.logout()}
+  }
+  logout(){
+    this.authToken=null;this.authUsername='';
+    localStorage.removeItem('jsab_token');
+    localStorage.removeItem('jsab_username');
+    document.getElementById('accountBtn').textContent='Not logged in — Click to sign in';
+    document.getElementById('accountLogoutBtn').style.display='none';
   }
 
   setupInput(){
@@ -2027,51 +2079,51 @@ class Game {
       document.getElementById('accountOverlay').classList.add('active');
       accErr.style.display='none';
     };
-    const accountLogin=()=>{
+    const accountLogin=async()=>{
       const un=document.getElementById('accountUsername').value.trim();
       const pw=document.getElementById('accountPassword').value;
       if(!un||!pw){accErr.style.display='block';accErr.textContent='Fill in both fields';return}
-      const stored=localStorage.getItem('jsab_account');
-      if(stored){
-        try{const d=JSON.parse(stored);
-        if(d.username===un&&d.password===pw){
-          localStorage.setItem('jsab_username',un);
-          document.getElementById('accountBtn').textContent='Signed in as '+un;
-          document.getElementById('accountLogoutBtn').style.display='inline-block';
-          accErr.style.display='none';this.showMenu();
-        }else{
-          accErr.style.display='block';accErr.textContent='Invalid credentials';
-        }}catch(e){accErr.style.display='block';accErr.textContent='Error reading account'}
-      }else{
-        accErr.style.display='block';accErr.textContent='No account found. Register first.';
-      }
+      try{
+        const d=await this.apiCall('/api/login',{method:'POST',body:JSON.stringify({username:un,password:pw})});
+        this.authToken=d.token;this.authUsername=d.username;
+        localStorage.setItem('jsab_token',d.token);
+        localStorage.setItem('jsab_username',d.username);
+        document.getElementById('accountBtn').textContent='Signed in as '+d.username;
+        document.getElementById('accountLogoutBtn').style.display='inline-block';
+        if(d.progress){
+          if(d.progress.completedLevels)Object.assign(this.completedLevels,d.progress.completedLevels);
+          if(d.progress.unlockedLevels)Object.assign(this.unlockedLevels,d.progress.unlockedLevels);
+          localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
+        }
+        accErr.style.display='none';this.showMenu();
+      }catch(e){accErr.style.display='block';accErr.textContent=e.message}
     };
     document.getElementById('accountLoginBtn').onclick=accountLogin;
     document.getElementById('accountPassword').onkeydown=e=>{if(e.key==='Enter')accountLogin()};
-    document.getElementById('accountRegisterBtn').onclick=()=>{
+    document.getElementById('accountRegisterBtn').onclick=async()=>{
       const un=document.getElementById('accountUsername').value.trim();
       const pw=document.getElementById('accountPassword').value;
       if(!un||!pw){accErr.style.display='block';accErr.textContent='Fill in both fields';return}
-      if(pw.length<3){accErr.style.display='block';accErr.textContent='Password too short (min 3)';return}
-      localStorage.setItem('jsab_account',JSON.stringify({username:un,password:pw}));
-      localStorage.setItem('jsab_username',un);
-      document.getElementById('accountBtn').textContent='Signed in as '+un;
-      document.getElementById('accountLogoutBtn').style.display='inline-block';
-      accErr.style.display='none';this.showMenu();
+      try{
+        const d=await this.apiCall('/api/signup',{method:'POST',body:JSON.stringify({username:un,password:pw})});
+        this.authToken=d.token;this.authUsername=d.username;
+        localStorage.setItem('jsab_token',d.token);
+        localStorage.setItem('jsab_username',d.username);
+        document.getElementById('accountBtn').textContent='Signed in as '+d.username;
+        document.getElementById('accountLogoutBtn').style.display='inline-block';
+        if(d.progress){
+          if(d.progress.completedLevels)Object.assign(this.completedLevels,d.progress.completedLevels);
+          if(d.progress.unlockedLevels)Object.assign(this.unlockedLevels,d.progress.unlockedLevels);
+          localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
+        }
+        accErr.style.display='none';this.showMenu();
+      }catch(e){accErr.style.display='block';accErr.textContent=e.message}
     };
-    document.getElementById('accountLogoutBtn').onclick=()=>{
-      localStorage.removeItem('jsab_account');
-      localStorage.removeItem('jsab_username');
-      document.getElementById('accountBtn').textContent='Not logged in — Click to sign in';
-      document.getElementById('accountLogoutBtn').style.display='none';
-      document.getElementById('accountPassword').value='';
-      this.showMenu();
-    };
+    document.getElementById('accountLogoutBtn').onclick=()=>{this.logout();this.showMenu()};
     document.getElementById('accountBackBtn').onclick=()=>this.showMenu();
     // Restore login state
-    const savedUser=localStorage.getItem('jsab_username');
-    if(savedUser){
-      document.getElementById('accountBtn').textContent='Signed in as '+savedUser;
+    if(this.authToken&&this.authUsername){
+      document.getElementById('accountBtn').textContent='Signed in as '+this.authUsername;
       document.getElementById('accountLogoutBtn').style.display='inline-block';
     }
   }
@@ -2400,7 +2452,7 @@ class Game {
       }
     }
     localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
-    const time=this.songTime;
+    this.saveProgressToServer();
     // White flash
     const flash=document.getElementById('flashOverlay');
     flash.style.background='#fff';
