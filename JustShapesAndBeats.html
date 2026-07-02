@@ -43,7 +43,7 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
 #customOverlay{background:rgba(13,13,26,0.97)}
 .custom-row{display:flex;align-items:center;gap:8px;margin:4px 0;justify-content:center}
 .custom-row label{font-size:9px;color:#aaa;min-width:130px;text-align:right}
-.custom-row input{width:50px;background:transparent;border:1px solid #555;color:#fff;font-family:'Press Start 2P',monospace;font-size:10px;padding:4px;text-align:center}
+.custom-row input{width:72px;background:transparent;border:1px solid #555;color:#fff;font-family:'Press Start 2P',monospace;font-size:10px;padding:4px;text-align:center}
 .custom-row input:focus{border-color:#fff;outline:none}
 .custom-row span{font-size:8px;color:#666}
 .account-text{font-size:8px;color:#666;text-align:center;margin-top:8px;cursor:pointer}
@@ -119,7 +119,7 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
     <div class="custom-row"><label>Boss Projectile Count</label><input type="number" id="cBossCount" value="100" min="10" max="500"><span>%</span></div>
     <div class="custom-row"><label>Sprinkler Rate</label><input type="number" id="cSprinklerRate" value="100" min="10" max="500"><span>%</span></div>
     <div class="custom-row"><label>Sprinkler Rotation</label><input type="number" id="cSprinklerRot" value="100" min="10" max="500"><span>%</span></div>
-    <div class="custom-row"><label>Player HP</label><input type="number" id="cPlayerHP" value="3" min="1" max="20"><span>hp</span></div>
+    <div class="custom-row"><label>Player HP</label><input type="number" id="cPlayerHP" value="3" min="1" max="20" style="width:60px"><span>hp</span></div>
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
       <button class="btn" id="customPlayBtn">PLAY</button>
       <button class="btn btn-small" id="customBackBtn">BACK</button>
@@ -130,8 +130,11 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
     <div class="title" style="font-size:20px;margin-bottom:16px">ACCOUNT</div>
     <div style="font-size:10px;color:#aaa;margin-bottom:12px">Progress is saved automatically</div>
     <div class="custom-row"><label>Username</label><input type="text" id="accountUsername" style="width:120px" maxlength="20"></div>
+    <div class="custom-row"><label>Password</label><input type="password" id="accountPassword" style="width:120px" maxlength="30"></div>
+    <div id="accountError" style="font-size:8px;color:#ff2a75;text-align:center;margin-top:4px;display:none">Invalid credentials</div>
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
-      <button class="btn" id="accountSaveBtn">SAVE</button>
+      <button class="btn" id="accountLoginBtn">LOGIN</button>
+      <button class="btn btn-small" id="accountRegisterBtn">REGISTER</button>
       <button class="btn btn-small" id="accountLogoutBtn" style="display:none">LOGOUT</button>
       <button class="btn btn-small btn-danger" id="accountBackBtn">BACK</button>
     </div>
@@ -1922,9 +1925,9 @@ class Game {
     this.difficulty='normal';
     this.customMul={playerSpeed:100,projSpeed:100,projCount:100,enemySpeed:100,projSize:100,bossHP:100,bossRate:100,bossCount:100,sprinklerRate:100,sprinklerRot:100,playerHP:3};
     const saved=localStorage.getItem('jsab_progress');
-    if(saved){try{const d=JSON.parse(saved);this.completedLevels=d.completedLevels||{easy:[],normal:[],hard:[],nightmare:[]};this.unlockedLevels=d.unlockedLevels||{easy:['level1'],normal:['level1'],hard:[],nightmare:[]}}catch(e){}}
-    this.unlockedLevels=this.unlockedLevels||{easy:['level1'],normal:['level1'],hard:[],nightmare:[]};
-    this.completedLevels=this.completedLevels||{easy:[],normal:[],hard:[],nightmare:[]};
+    if(saved){try{const d=JSON.parse(saved);if(d.completedLevels)this.completedLevels=d.completedLevels;if(d.unlockedLevels)this.unlockedLevels=d.unlockedLevels}catch(e){}}
+    this.completedLevels=Object.assign({easy:[],normal:[],hard:[],nightmare:[],custom:[]},this.completedLevels);
+    this.unlockedLevels=Object.assign({easy:['level1'],normal:['level1'],hard:[],nightmare:[],custom:['level1','level2','level3']},this.unlockedLevels);
     this.deathCount=0;
     this.levelStartTime=0;
     this.players=[];
@@ -2018,25 +2021,50 @@ class Game {
     };
     document.getElementById('customBackBtn').onclick=()=>this.showMenu();
     // Account
+    const accErr=document.getElementById('accountError');
     document.getElementById('accountBtn').onclick=()=>{
-      const un=localStorage.getItem('jsab_username');
-      if(un)document.getElementById('accountUsername').value=un;
       document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));
       document.getElementById('accountOverlay').classList.add('active');
+      accErr.style.display='none';
     };
-    document.getElementById('accountSaveBtn').onclick=()=>{
+    const accountLogin=()=>{
       const un=document.getElementById('accountUsername').value.trim();
-      if(un){
-        localStorage.setItem('jsab_username',un);
-        document.getElementById('accountBtn').textContent='Signed in as '+un;
-        document.getElementById('accountLogoutBtn').style.display='inline-block';
-        this.showMenu();
+      const pw=document.getElementById('accountPassword').value;
+      if(!un||!pw){accErr.style.display='block';accErr.textContent='Fill in both fields';return}
+      const stored=localStorage.getItem('jsab_account');
+      if(stored){
+        try{const d=JSON.parse(stored);
+        if(d.username===un&&d.password===pw){
+          localStorage.setItem('jsab_username',un);
+          document.getElementById('accountBtn').textContent='Signed in as '+un;
+          document.getElementById('accountLogoutBtn').style.display='inline-block';
+          accErr.style.display='none';this.showMenu();
+        }else{
+          accErr.style.display='block';accErr.textContent='Invalid credentials';
+        }}catch(e){accErr.style.display='block';accErr.textContent='Error reading account'}
+      }else{
+        accErr.style.display='block';accErr.textContent='No account found. Register first.';
       }
     };
+    document.getElementById('accountLoginBtn').onclick=accountLogin;
+    document.getElementById('accountPassword').onkeydown=e=>{if(e.key==='Enter')accountLogin()};
+    document.getElementById('accountRegisterBtn').onclick=()=>{
+      const un=document.getElementById('accountUsername').value.trim();
+      const pw=document.getElementById('accountPassword').value;
+      if(!un||!pw){accErr.style.display='block';accErr.textContent='Fill in both fields';return}
+      if(pw.length<3){accErr.style.display='block';accErr.textContent='Password too short (min 3)';return}
+      localStorage.setItem('jsab_account',JSON.stringify({username:un,password:pw}));
+      localStorage.setItem('jsab_username',un);
+      document.getElementById('accountBtn').textContent='Signed in as '+un;
+      document.getElementById('accountLogoutBtn').style.display='inline-block';
+      accErr.style.display='none';this.showMenu();
+    };
     document.getElementById('accountLogoutBtn').onclick=()=>{
+      localStorage.removeItem('jsab_account');
       localStorage.removeItem('jsab_username');
       document.getElementById('accountBtn').textContent='Not logged in — Click to sign in';
       document.getElementById('accountLogoutBtn').style.display='none';
+      document.getElementById('accountPassword').value='';
       this.showMenu();
     };
     document.getElementById('accountBackBtn').onclick=()=>this.showMenu();
@@ -2044,6 +2072,7 @@ class Game {
     const savedUser=localStorage.getItem('jsab_username');
     if(savedUser){
       document.getElementById('accountBtn').textContent='Signed in as '+savedUser;
+      document.getElementById('accountLogoutBtn').style.display='inline-block';
     }
   }
 

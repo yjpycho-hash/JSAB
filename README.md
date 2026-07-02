@@ -60,8 +60,9 @@ The game includes a basic username system for display purposes. Full account per
 
 | ID | Name | Difficulty | Boss |
 |----|------|-----------|------|
-| level1 | Neon Gauntlet | ★★ | — |
-| level2 | Synthwave Showdown | ★★★ | Wave Boss |
+| level1 | The Gatekeeper | ★★ | — |
+| level2 | Cascade | ★★★ | Wave Boss |
+| level3 | The Pursuit | ★★★★ | Chaser Gauntlet |
 
 ## How to Run Locally
 
