@@ -1,6 +1,6 @@
 # JSAB - Just Shapes & Beats
 
-A rhythm-based dodge-'em-up game built with vanilla HTML5 Canvas and JavaScript. Inspired by *Just Shapes & Beats*.
+A **fan game** inspired by *Just Shapes & Beats*. Built with vanilla HTML5 Canvas and JavaScript. Not affiliated with or endorsed by the original creators.
 
 ## How to Play
 
