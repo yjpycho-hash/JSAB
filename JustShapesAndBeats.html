@@ -1494,8 +1494,11 @@ class Player {
     ctx.fillRect(this.x-sz/2,this.y-sz/2,sz,sz);
 
     // Health segments on the player square itself
-    const segW=8,segH=5,segGap=3;
-    const totalW=3*segW+2*segGap;
+    const totalSegW=28;
+    const segGap=3;
+    const segW=Math.max(4,(totalSegW-(this.maxHP-1)*segGap)/this.maxHP);
+    const segH=5;
+    const totalW=this.maxHP*segW+(this.maxHP-1)*segGap;
     const startX=this.x-totalW/2;
     const startY=this.y+sz/2+4;
     for(let i=0;i<this.maxHP;i++){
