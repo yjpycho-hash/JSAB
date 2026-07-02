@@ -1217,7 +1217,7 @@ class Chaser {
   constructor(data){
     this.x=data.x||400;this.y=data.y||100;
     this.size=22;
-    this.speed=200;
+    this.speed=120;
     this.active=false;
     this.spawnTime=data.spawnTime||data.time||0;
     this.color='#ff2a75';
@@ -1319,12 +1319,6 @@ class Chaser {
 class Sprinkler {
   constructor(data){
     this.x=data.x||0;this.y=data.y||300;
-    this.enterTargetX=data.enterTargetX!=null?data.enterTargetX:
-      this.x<=10?this.x+70:this.x>=790?this.x-70:this.x;
-    this.enterTargetY=data.enterTargetY!=null?data.enterTargetY:
-      this.y<=10?this.y+70:this.y>=590?this.y-70:this.y;
-    this.entered=Math.hypot(this.enterTargetX-this.x,this.enterTargetY-this.y)<2;
-    this.enterSpeed=120;
     this.angle=data.angle||0;
     this.sprayArc=data.sprayArc||Math.PI/3;
     this.sprayCount=data.sprayCount||6;
@@ -1339,6 +1333,10 @@ class Sprinkler {
     this.spawnedHazards=[];
     this.color='#ff8c00';
     this.telegraph=data.createGhost!==false;
+    // Movement toward center
+    this.targetX=400;
+    this.targetY=300;
+    this.moveSpeed=90;
   }
   isTelegraph(songTime){
     if(!this.telegraph)return false;
@@ -1352,20 +1350,15 @@ class Sprinkler {
   update(dt,songTime){
     if(!this.active&&songTime>=this.spawnTime){this.active=true;this.age=0;}
     if(!this.active)return;
-    if(!this.entered){
-      const dx=this.enterTargetX-this.x,dy=this.enterTargetY-this.y;
-      const dist=Math.hypot(dx,dy);
-      if(dist<3){
-        this.x=this.enterTargetX;this.y=this.enterTargetY;
-        this.entered=true;
-      }else{
-        this.x+=dx/dist*this.enterSpeed*dt;
-        this.y+=dy/dist*this.enterSpeed*dt;
-        return;
-      }
-    }
     this.age+=dt;
     if(this.age>this.duration){this.active=false;return;}
+    // Move diagonally toward center while spraying
+    const dx=this.targetX-this.x,dy=this.targetY-this.y;
+    const dist=Math.hypot(dx,dy);
+    if(dist>5){
+      this.x+=dx/dist*this.moveSpeed*dt;
+      this.y+=dy/dist*this.moveSpeed*dt;
+    }
     this.angle+=this.rotSpeed*dt;
     const last=Math.floor((this.age-dt)/this.sprayInterval);
     const curr=Math.floor(this.age/this.sprayInterval);
@@ -1388,8 +1381,8 @@ class Sprinkler {
   draw(ctx,songTime){
     const isGhost=this.isTelegraph(songTime);
     if(!this.active&&!isGhost)return;
-    const drawX=isGhost?this.enterTargetX:this.x;
-    const drawY=isGhost?this.enterTargetY:this.y;
+    const drawX=isGhost?this.x:this.x;
+    const drawY=isGhost?this.y:this.y;
     ctx.save();
     const s=this.radius;
     const pulse=0.6+Math.sin((isGhost?songTime:this.age)*10)*0.4;
@@ -1416,6 +1409,17 @@ class Sprinkler {
       ctx.globalAlpha=pulse*0.5;
       ctx.textAlign='center';
       ctx.fillText('INCOMING',drawX,drawY-s-10);
+      // Show movement direction
+      const mdx=this.targetX-this.x,mdy=this.targetY-this.y;
+      const md=Math.hypot(mdx,mdy)||1;
+      ctx.strokeStyle=`rgba(255,140,0,${pulse*0.3})`;
+      ctx.lineWidth=1.5;
+      ctx.setLineDash([2,4]);
+      ctx.beginPath();
+      ctx.moveTo(drawX,drawY);
+      ctx.lineTo(drawX+mdx/md*50,drawY+mdy/md*50);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }else{
       ctx.shadowColor=this.color;
       ctx.shadowBlur=8;
@@ -2042,16 +2046,16 @@ class Game {
   getDifficultyMul(){
     if(this.difficulty==='normal')return{
       speed:0.7,count:0.65,pspeed:0.65,bossHP:0.5,playerHP:5,playerSpeed:1.15,
-      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,chaserLifetime:12,
+      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,chaserLifetime:5,
       sprinklerRate:1.4,sprinklerRot:0.7
     };
     if(this.difficulty==='nightmare')return{
       speed:1.4,count:1.7,pspeed:1.5,bossHP:2,playerHP:2,playerSpeed:0.85,
-      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,chaserLifetime:25,
+      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,chaserLifetime:12,
       sprinklerRate:0.65,sprinklerRot:1.5
     };
     return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1,
-      psize:1,bossRate:1,bossCount:1,extraEvents:0,chaserLifetime:15,
+      psize:1,bossRate:1,bossCount:1,extraEvents:0,chaserLifetime:8,
       sprinklerRate:1,sprinklerRot:1};
   }
 
