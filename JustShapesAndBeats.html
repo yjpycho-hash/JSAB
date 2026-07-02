@@ -1177,6 +1177,7 @@ class Boss {
     if(!currentPattern)return;
 
     const spawnInterval=currentPattern.spawnRate||0.3;
+    const psize=currentPattern.projectileSize||8;
     if(currentPattern.pattern==='spiral'){
       if(Math.floor(this.phaseElapsed/spawnInterval)!==Math.floor((this.phaseElapsed-dt)/spawnInterval)){
         const angle=this.phaseElapsed*5;
@@ -1184,12 +1185,13 @@ class Boss {
         const p=new Projectile({
           x:this.x+Math.cos(angle)*30,y:this.y+Math.sin(angle)*30,
           vx:Math.cos(angle)*spd,vy:Math.sin(angle)*spd,
-          radius:8,shape:'circle',spawnTime:songTime,damage:1
+          radius:psize,shape:'circle',spawnTime:songTime,damage:1
         });
         this.spawnedHazards.push(p);
       }
     } else if(currentPattern.pattern==='grid'){
-      if(Math.floor(this.phaseElapsed/0.5)!==Math.floor((this.phaseElapsed-dt)/0.5)){
+      const gridInterval=currentPattern.spawnRate||0.5;
+      if(Math.floor(this.phaseElapsed/gridInterval)!==Math.floor((this.phaseElapsed-dt)/gridInterval)){
         const rows=currentPattern.rows||4,cols=currentPattern.cols||4;
         const spd=currentPattern.speed||100;
         for(let r=0;r<rows;r++){
@@ -1200,7 +1202,7 @@ class Boss {
             const n=normalize(dx,dy);
             const p=new Projectile({
               x:px,y:py,vx:n.x*spd,vy:n.y*spd,
-              radius:6,shape:'circle',
+              radius:psize*0.75,shape:'circle',
               spawnTime:songTime,damage:1
             });
             this.spawnedHazards.push(p);
@@ -1219,7 +1221,7 @@ class Boss {
           const p=new Projectile({
             x:this.x,y:this.y,
             vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,
-            radius:7,shape:'circle',
+            radius:psize,shape:'circle',
             spawnTime:songTime,damage:1
           });
           this.spawnedHazards.push(p);
@@ -1707,29 +1709,54 @@ class Game {
   }
 
   getDifficultyMul(){
-    if(this.difficulty==='normal')return{speed:0.7,count:0.65,pspeed:0.7,bossHP:0.65,playerHP:5,playerSpeed:1.15};
-    if(this.difficulty==='nightmare')return{speed:1.4,count:1.45,pspeed:1.4,bossHP:1.6,playerHP:2,playerSpeed:0.85};
-    return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1};
+    if(this.difficulty==='normal')return{
+      speed:0.7,count:0.65,pspeed:0.65,bossHP:0.5,playerHP:5,playerSpeed:1.15,
+      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0
+    };
+    if(this.difficulty==='nightmare')return{
+      speed:1.4,count:1.5,pspeed:1.45,bossHP:2,playerHP:2,playerSpeed:0.85,
+      psize:1.35,bossRate:0.6,bossCount:1.6,extraEvents:2
+    };
+    return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1,
+      psize:1,bossRate:1,bossCount:1,extraEvents:0};
   }
 
   applyDifficultyModifiers(){
     const mul=this.getDifficultyMul();
-    if(mul.speed===1&&mul.count===1&&mul.pspeed===1)return;
+    if(mul.speed===1&&mul.count===1&&mul.pspeed===1&&mul.extraEvents===0)return;
+    const newEvents=[];
     for(const ev of this.level.events){
       if(ev.type==='spawn'){
-        if(ev.spawn_count)ev.spawn_count=Math.max(1,Math.round(ev.spawn_count*mul.count));
-        if(typeof ev.vx==='number')ev.vx*=mul.speed;
-        if(typeof ev.vy==='number')ev.vy*=mul.speed;
+        const ne={...ev};
+        if(ne.spawn_count)ne.spawn_count=Math.max(1,Math.round(ne.spawn_count*mul.count));
+        if(typeof ne.vx==='number')ne.vx*=mul.speed;
+        if(typeof ne.vy==='number')ne.vy*=mul.speed;
+        // Duplicate for extra chaos on harder diffs
+        for(let i=0;i<mul.extraEvents;i++){
+          const dup={...ev,spawn_count:Math.max(1,Math.round((ev.spawn_count||1)*0.5))};
+          dup.time=ev.time+0.3*(i+1);
+          if(dup.time>this.level.duration)break;
+          if(typeof dup.vx==='number')dup.vx*=mul.speed;
+          if(typeof dup.vy==='number')dup.vy*=mul.speed;
+          newEvents.push(dup);
+        }
       }
       if(ev.type==='boss'){
         ev.hp=Math.max(1,Math.round(ev.hp*mul.bossHP));
         if(ev.phases)for(const ph of ev.phases){
           if(ph.projectileSpeed)ph.projectileSpeed=Math.round(ph.projectileSpeed*mul.pspeed);
           if(ph.speed)ph.speed=Math.round(ph.speed*mul.speed);
+          if(ph.spawnRate)ph.spawnRate=Math.max(0.1,ph.spawnRate*mul.bossRate);
+          if(ph.count)ph.count=Math.max(1,Math.round(ph.count*mul.bossCount));
+          if(ph.rows)ph.rows=Math.max(1,Math.round(ph.rows*(0.8+0.4*Math.random())));
+          if(ph.cols)ph.cols=Math.max(1,Math.round(ph.cols*(0.8+0.4*Math.random())));
+          ph.projectileSize=8*(mul.psize||1);
         }
       }
       if(ev.type==='wall'&&ev.speed)ev.speed=Math.round(ev.speed*mul.speed);
     }
+    this.level.events.push(...newEvents);
+    this.level.events.sort((a,b)=>a.time-b.time);
   }
 
   renderMenuShapes(){
