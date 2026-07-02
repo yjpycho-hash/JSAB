@@ -1,0 +1,6 @@
+# JSAB - Just Shapes & Beats
+#
+# This is a browser-based HTML5 Canvas game.
+# No server-side dependencies or Python packages required.
+#
+# To run: Open index.html in any modern web browser.
