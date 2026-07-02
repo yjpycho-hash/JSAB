@@ -42,7 +42,7 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
 .level-card .name{font-size:11px;color:#fff;margin-bottom:8px}
 .level-card .stars{font-size:10px;color:#ff2a75;margin-bottom:6px}
 .level-card .lock{font-size:20px;margin-top:5px}
-.menu-shape{position:absolute;opacity:0.3;pointer-events:none;transition:all 0.1s}
+.menu-shape{position:absolute;opacity:0.3;pointer-events:none;transition:opacity 0.1s;will-change:transform}
 .hud{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
 .hud-top{position:absolute;top:10px;width:100%;display:flex;justify-content:space-between;padding:0 14px}
 .health-row{display:flex;gap:4px;align-items:center}
@@ -124,7 +124,7 @@ const W = 800, H = 600;
 const PLAYER_SIZE = 30;
 const PLAYER_RENDER_SIZE = 32;
 const GRAVITY = 200;
-const MAX_PARTICLES = 500;
+const MAX_PARTICLES = 200;
 
 // ============================================================
 // AUDIO ENGINE (Procedural Chiptune via OfflineAudioContext)
@@ -792,7 +792,7 @@ class Projectile {
       if(this.shape==='square')ctx.rotate(this.rotation);
       ctx.fillStyle='#ff2a75';
       ctx.shadowColor='#ff2a75';
-      ctx.shadowBlur=10;
+      ctx.shadowBlur=4;
       if(this.shape==='circle'){
         ctx.beginPath();
         ctx.arc(0,0,this.radius,0,Math.PI*2);
@@ -1217,14 +1217,28 @@ class Chaser {
   constructor(data){
     this.x=data.x||400;this.y=data.y||100;
     this.size=22;
-    this.speed=data.speed||300;
-    this.active=true;
+    this.speed=200;
+    this.active=false;
     this.spawnTime=data.spawnTime||data.time||0;
     this.color='#ff2a75';
     this.hasHit=false;
+    this.lifetime=data.lifetime||15;
+    this.age=0;
+    this.telegraph=data.createGhost!==false;
+  }
+  isTelegraph(songTime){
+    if(!this.telegraph)return false;
+    return !this.active && songTime<this.spawnTime;
   }
   update(dt,songTime,players){
-    if(!this.active||this.hasHit)return;
+    if(this.hasHit)return;
+    if(!this.active&&songTime>=this.spawnTime){
+      this.active=true;
+      this.age=0;
+    }
+    if(!this.active)return;
+    this.age+=dt;
+    if(this.age>this.lifetime){this.active=false;return;}
     let closest=null,minDist=Infinity;
     for(const p of players){
       if(!p.alive||p.dead)continue;
@@ -1247,39 +1261,70 @@ class Chaser {
     }
     return false;
   }
-  draw(ctx){
-    if(!this.active||this.hasHit)return;
+  draw(ctx,songTime){
+    if(this.hasHit)return;
+    const isGhost=this.isTelegraph(songTime);
+    if(!this.active&&!isGhost)return;
     ctx.save();
     const s=this.size;
-    ctx.shadowColor=this.color;
-    ctx.shadowBlur=18;
-    ctx.fillStyle=this.color;
-    ctx.beginPath();
-    ctx.moveTo(this.x,this.y-s);
-    ctx.lineTo(this.x+s,this.y);
-    ctx.lineTo(this.x,this.y+s);
-    ctx.lineTo(this.x-s,this.y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.fillStyle='rgba(255,255,255,0.12)';
-    ctx.beginPath();
-    ctx.moveTo(this.x,this.y-s*0.5);
-    ctx.lineTo(this.x+s*0.5,this.y);
-    ctx.lineTo(this.x,this.y+s*0.5);
-    ctx.lineTo(this.x-s*0.5,this.y);
-    ctx.closePath();
-    ctx.fill();
+    const pulse=0.6+Math.sin((isGhost?songTime:this.age)*10)*0.4;
+    if(isGhost){
+      ctx.globalAlpha=0.5*pulse;
+      ctx.shadowColor='#ff2a75';
+      ctx.shadowBlur=20;
+      ctx.strokeStyle='#ff2a75';
+      ctx.lineWidth=3;
+      ctx.setLineDash([4,6]);
+      ctx.beginPath();
+      ctx.moveTo(this.x,this.y-s);
+      ctx.lineTo(this.x+s,this.y);
+      ctx.lineTo(this.x,this.y+s);
+      ctx.lineTo(this.x-s,this.y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font='10px "Press Start 2P",monospace';
+      ctx.fillStyle='#ff2a75';
+      ctx.globalAlpha=pulse*0.6;
+      ctx.textAlign='center';
+      ctx.fillText('???',this.x,this.y+s+20);
+    }else{
+      ctx.shadowColor=this.color;
+      ctx.shadowBlur=8;
+      ctx.fillStyle=this.color;
+      ctx.beginPath();
+      ctx.moveTo(this.x,this.y-s);
+      ctx.lineTo(this.x+s,this.y);
+      ctx.lineTo(this.x,this.y+s);
+      ctx.lineTo(this.x-s,this.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.fillStyle='rgba(255,255,255,0.12)';
+      ctx.beginPath();
+      ctx.moveTo(this.x,this.y-s*0.5);
+      ctx.lineTo(this.x+s*0.5,this.y);
+      ctx.lineTo(this.x,this.y+s*0.5);
+      ctx.lineTo(this.x-s*0.5,this.y);
+      ctx.closePath();
+      ctx.fill();
+    }
     ctx.restore();
   }
 }
 
 // ============================================================
-// SPRINKLER CLASS - border enemy that sprays projectiles in an arc
+// SPRINKLER CLASS - border enemy that enters the map then sprays
 // ============================================================
 class Sprinkler {
   constructor(data){
     this.x=data.x||0;this.y=data.y||300;
+    this.enterTargetX=data.enterTargetX!=null?data.enterTargetX:
+      this.x<=10?this.x+70:this.x>=790?this.x-70:this.x;
+    this.enterTargetY=data.enterTargetY!=null?data.enterTargetY:
+      this.y<=10?this.y+70:this.y>=590?this.y-70:this.y;
+    this.entered=Math.hypot(this.enterTargetX-this.x,this.enterTargetY-this.y)<2;
+    this.enterSpeed=120;
     this.angle=data.angle||0;
     this.sprayArc=data.sprayArc||Math.PI/3;
     this.sprayCount=data.sprayCount||6;
@@ -1293,6 +1338,11 @@ class Sprinkler {
     this.rotSpeed=data.rotSpeed||1.2;
     this.spawnedHazards=[];
     this.color='#ff8c00';
+    this.telegraph=data.createGhost!==false;
+  }
+  isTelegraph(songTime){
+    if(!this.telegraph)return false;
+    return !this.active && songTime>=this.spawnTime-HAZARD_TELEGRAPH_TIME && songTime<this.spawnTime;
   }
   activate(time){
     this.active=true;
@@ -1302,6 +1352,18 @@ class Sprinkler {
   update(dt,songTime){
     if(!this.active&&songTime>=this.spawnTime){this.active=true;this.age=0;}
     if(!this.active)return;
+    if(!this.entered){
+      const dx=this.enterTargetX-this.x,dy=this.enterTargetY-this.y;
+      const dist=Math.hypot(dx,dy);
+      if(dist<3){
+        this.x=this.enterTargetX;this.y=this.enterTargetY;
+        this.entered=true;
+      }else{
+        this.x+=dx/dist*this.enterSpeed*dt;
+        this.y+=dy/dist*this.enterSpeed*dt;
+        return;
+      }
+    }
     this.age+=dt;
     if(this.age>this.duration){this.active=false;return;}
     this.angle+=this.rotSpeed*dt;
@@ -1323,38 +1385,63 @@ class Sprinkler {
       }
     }
   }
-  draw(ctx){
-    if(!this.active)return;
+  draw(ctx,songTime){
+    const isGhost=this.isTelegraph(songTime);
+    if(!this.active&&!isGhost)return;
+    const drawX=isGhost?this.enterTargetX:this.x;
+    const drawY=isGhost?this.enterTargetY:this.y;
     ctx.save();
     const s=this.radius;
-    const pulse=0.8+Math.sin(this.age*8)*0.2;
-    ctx.shadowColor=this.color;
-    ctx.shadowBlur=15*pulse;
-    ctx.fillStyle=this.color;
-    ctx.beginPath();
-    ctx.arc(this.x,this.y,s,0,Math.PI*2);
-    ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.fillStyle='rgba(255,255,255,0.15)';
-    ctx.beginPath();
-    ctx.arc(this.x,this.y,s*0.5,0,Math.PI*2);
-    ctx.fill();
-    // Spray arc indicator
-    ctx.strokeStyle=`rgba(255,255,255,${pulse*0.25})`;
-    ctx.lineWidth=1.5;
-    ctx.setLineDash([3,4]);
+    const pulse=0.6+Math.sin((isGhost?songTime:this.age)*10)*0.4;
     const half=this.sprayArc/2;
-    ctx.beginPath();
-    ctx.arc(this.x,this.y,s+30,this.angle-half,this.angle+half);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    // Direction line
-    ctx.strokeStyle=`rgba(255,255,255,${pulse*0.15})`;
-    ctx.lineWidth=1;
-    ctx.beginPath();
-    ctx.moveTo(this.x,this.y);
-    ctx.lineTo(this.x+Math.cos(this.angle)*40,this.y+Math.sin(this.angle)*40);
-    ctx.stroke();
+    if(isGhost){
+      ctx.globalAlpha=0.4*pulse;
+      ctx.strokeStyle='#ff8c00';
+      ctx.lineWidth=2.5;
+      ctx.setLineDash([4,6]);
+      ctx.shadowColor='#ff8c00';
+      ctx.shadowBlur=15;
+      ctx.beginPath();
+      ctx.arc(drawX,drawY,s,0,Math.PI*2);
+      ctx.stroke();
+      ctx.shadowBlur=0;
+      ctx.strokeStyle=`rgba(255,140,0,${pulse*0.5})`;
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.arc(drawX,drawY,s+35,this.angle-half,this.angle+half);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font='9px "Press Start 2P",monospace';
+      ctx.fillStyle='#ff8c00';
+      ctx.globalAlpha=pulse*0.5;
+      ctx.textAlign='center';
+      ctx.fillText('INCOMING',drawX,drawY-s-10);
+    }else{
+      ctx.shadowColor=this.color;
+      ctx.shadowBlur=8;
+      ctx.fillStyle=this.color;
+      ctx.beginPath();
+      ctx.arc(drawX,drawY,s,0,Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.fillStyle='rgba(255,255,255,0.15)';
+      ctx.beginPath();
+      ctx.arc(drawX,drawY,s*0.5,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle=`rgba(255,255,255,${pulse*0.25})`;
+      ctx.lineWidth=1.5;
+      ctx.setLineDash([3,4]);
+      ctx.beginPath();
+      ctx.arc(drawX,drawY,s+30,this.angle-half,this.angle+half);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle=`rgba(255,255,255,${pulse*0.15})`;
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(drawX,drawY);
+      ctx.lineTo(drawX+Math.cos(this.angle)*40,drawY+Math.sin(this.angle)*40);
+      ctx.stroke();
+    }
     ctx.restore();
   }
   collidesWith(){return false;}
@@ -1878,6 +1965,8 @@ class Game {
 
   showMenu(){
     this.stopAll();
+    this.ctx.fillStyle='#0d0d1a';
+    this.ctx.fillRect(0,0,800,600);
     this.state='MENU';
     document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));
     const menu=document.getElementById('menuOverlay');
@@ -1905,6 +1994,8 @@ class Game {
 
   showLevelSelect(){
     this.state='LEVEL_SELECT';
+    this.ctx.fillStyle='#0d0d1a';
+    this.ctx.fillRect(0,0,800,600);
     document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));
     document.getElementById('levelSelectOverlay').classList.add('active');
     this.buildLevelGrid();
@@ -1951,14 +2042,17 @@ class Game {
   getDifficultyMul(){
     if(this.difficulty==='normal')return{
       speed:0.7,count:0.65,pspeed:0.65,bossHP:0.5,playerHP:5,playerSpeed:1.15,
-      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0
+      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,chaserLifetime:12,
+      sprinklerRate:1.4,sprinklerRot:0.7
     };
     if(this.difficulty==='nightmare')return{
       speed:1.4,count:1.7,pspeed:1.5,bossHP:2,playerHP:2,playerSpeed:0.85,
-      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1
+      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,chaserLifetime:25,
+      sprinklerRate:0.65,sprinklerRot:1.5
     };
     return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1,
-      psize:1,bossRate:1,bossCount:1,extraEvents:0};
+      psize:1,bossRate:1,bossCount:1,extraEvents:0,chaserLifetime:15,
+      sprinklerRate:1,sprinklerRot:1};
   }
 
   applyDifficultyModifiers(){
@@ -1994,6 +2088,19 @@ class Game {
         }
       }
       if(ev.type==='wall'&&ev.speed)ev.speed=Math.round(ev.speed*mul.speed);
+    }
+    // Chaser lifetime by difficulty
+    for(const ev of this.level.events){
+      if(ev.type==='chaser'){
+        ev.lifetime=mul.chaserLifetime;
+      }
+    }
+    // Sprinkler rate and rotation by difficulty
+    for(const ev of this.level.events){
+      if(ev.type==='sprinkler'){
+        if(ev.sprayInterval)ev.sprayInterval*=mul.sprinklerRate;
+        if(ev.rotSpeed)ev.rotSpeed*=mul.sprinklerRot;
+      }
     }
     this.level.events.push(...newEvents);
     this.level.events.sort((a,b)=>a.time-b.time);
@@ -2226,15 +2333,27 @@ class Game {
     }
 
     // Clean up inactive hazards
+    let projectileCount=0;
     this.hazards=this.hazards.filter(h=>{
       if(h instanceof Boss)return h.active;
-      if(h instanceof Sprinkler)return h.active;
-      if(h instanceof Projectile)return h.active||(!h.active&&songTime<h.spawnTime);
+      if(h instanceof Sprinkler)return h.active||h.isTelegraph(songTime);
+      if(h instanceof Projectile){
+        if(!h.active&&songTime<h.spawnTime)return true;
+        if(!h.active)return false;
+        projectileCount++;
+        if(projectileCount>300)return false;
+        if(h.x<-200||h.x>1000||h.y<-200||h.y>800)return false;
+        return true;
+      }
       if(h instanceof Beam)return h.active||h.isTelegraph(songTime);
       if(h instanceof Wall)return h.active||h.isTelegraph(songTime);
       if(h instanceof PulsingRing)return h.active||h.isTelegraph(songTime);
       if(h instanceof Wave)return h.active||h.isTelegraph(songTime);
-      if(h instanceof Chaser)return h.active;
+      if(h instanceof Chaser){
+        if(!h.active&&!h.isTelegraph(songTime))return false;
+        if(h.x<-200||h.x>1000||h.y<-200||h.y>800)return false;
+        return true;
+      }
       return true;
     });
 
@@ -2242,6 +2361,10 @@ class Game {
     for(let p of this.players){
       if(!p.alive||p.dead||p.downed||p.isDashing||p.invincible)continue;
       for(let h of this.hazards){
+        // Skip collision for hazards far from this player
+        if(typeof h.x==='number'&&typeof h.y==='number'){
+          if(Math.abs(h.x-p.x)>500||Math.abs(h.y-p.y)>500)continue;
+        }
         const hit = h instanceof Boss
           ? h.collidesWith(p)
           : h.collidesWith ? h.collidesWith(p, songTime) : false;
@@ -2344,12 +2467,11 @@ class Game {
         break;
       }
       case'chaser':{
-        this.hazards.push(new Chaser({...ev,spawnTime:ev.time}));
+        this.hazards.push(new Chaser({...ev,spawnTime:ev.time,time:ev.time-HAZARD_TELEGRAPH_TIME}));
         break;
       }
       case'sprinkler':{
-        const s=new Sprinkler({...ev,spawnTime:ev.time});
-        s.activate(ev.time);
+        const s=new Sprinkler({...ev,spawnTime:ev.time,time:ev.time-HAZARD_TELEGRAPH_TIME});
         this.hazards.push(s);
         break;
       }
