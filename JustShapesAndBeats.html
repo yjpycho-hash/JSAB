@@ -1824,9 +1824,8 @@ class Player {
     ctx.fillRect(this.x-sz/2,this.y-sz/2,sz,sz);
 
     // Health segments on the player square itself
-    const totalSegW=28;
-    const segGap=3;
-    const segW=Math.max(4,(totalSegW-(this.maxHP-1)*segGap)/this.maxHP);
+    const segW=4;
+    const segGap=2;
     const segH=5;
     const totalW=this.maxHP*segW+(this.maxHP-1)*segGap;
     const startX=this.x-totalW/2;
@@ -2044,21 +2043,21 @@ class Game {
   getDifficultyMul(){
     if(this.difficulty==='easy')return{
       speed:0.5,count:0.45,pspeed:0.5,bossHP:0.3,playerHP:7,playerSpeed:1.3,
-      psize:0.55,bossRate:1.6,bossCount:0.4,extraEvents:0,
+      psize:0.55,bossRate:1.6,bossCount:0.4,extraEvents:0,chaserLifetime:4,
       sprinklerRate:1.8,sprinklerRot:0.4
     };
     if(this.difficulty==='normal')return{
       speed:0.7,count:0.65,pspeed:0.65,bossHP:0.5,playerHP:5,playerSpeed:1.15,
-      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,
+      psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,chaserLifetime:6,
       sprinklerRate:1.5,sprinklerRot:0.6
     };
     if(this.difficulty==='nightmare')return{
       speed:1.4,count:1.7,pspeed:1.5,bossHP:2,playerHP:2,playerSpeed:0.85,
-      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,
+      psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,chaserLifetime:6,
       sprinklerRate:0.5,sprinklerRot:1.7
     };
     return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1,
-      psize:1,bossRate:1,bossCount:1,extraEvents:0,
+      psize:1,bossRate:1,bossCount:1,extraEvents:0,chaserLifetime:6,
       sprinklerRate:1,sprinklerRot:1};
   }
 
@@ -2095,6 +2094,12 @@ class Game {
         }
       }
       if(ev.type==='wall'&&ev.speed)ev.speed=Math.round(ev.speed*mul.speed);
+    }
+    // Chaser lifetime by difficulty
+    for(const ev of this.level.events){
+      if(ev.type==='chaser'){
+        ev.lifetime=mul.chaserLifetime;
+      }
     }
     // Sprinkler rate and rotation by difficulty
     for(const ev of this.level.events){
