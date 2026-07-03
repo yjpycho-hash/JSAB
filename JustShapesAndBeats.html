@@ -43,8 +43,8 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
 .diff-btn.locked{opacity:0.35;cursor:not-allowed}
 .diff-btn.locked:hover{background:transparent;box-shadow:none}
 #customOverlay{background:rgba(13,13,26,0.97)}
-.custom-row{display:flex;align-items:center;gap:8px;margin:4px 0;justify-content:center}
-.custom-row label{font-size:9px;color:#aaa;min-width:130px;text-align:left}
+.custom-row{display:flex;align-items:center;gap:8px;margin:4px auto;width:fit-content;justify-content:center}
+.custom-row label{font-size:9px;color:#aaa;text-align:right;min-width:90px}
 .custom-row input{width:72px;background:transparent;border:1px solid #555;color:#fff;font-family:'Press Start 2P',monospace;font-size:10px;padding:4px;text-align:center}
 .custom-row input:focus{border-color:#fff;outline:none}
 .custom-row span{font-size:8px;color:#666}
@@ -113,9 +113,13 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
     <div class="title" style="font-size:18px;margin-bottom:10px">HOW TO PLAY</div>
     <div style="font-size:8px;color:#aaa;text-align:left;max-width:520px;margin:0 auto;line-height:1.8">
       <b style="color:#fff">Controls</b><br>
-      <span style="color:#888">WASD / Arrow Keys</span> — Move<br>
-      <span style="color:#888">Space</span> — Dash (invincible briefly)<br>
+      <span style="color:#888">WASD</span> — P1 Move &nbsp;&nbsp; <span style="color:#888">Space</span> — P1 Dash<br>
+      <span style="color:#888">Arrow Keys</span> — P2 Move &nbsp;&nbsp; <span style="color:#888">Enter</span> — P2 Dash<br>
       <span style="color:#888">Escape</span> — Pause<br><br>
+      <b style="color:#fff">Local 2-Player</b><br>
+      Both players share the screen simultaneously.<br>
+      Each player has their own health bar and score.<br>
+      The level ends when either player dies.<br><br>
       <b style="color:#fff">Goal</b><br>
       Survive until the music ends. Every level has a unique set of patterns.<br><br>
       <b style="color:#fff">Hazards</b><br>
@@ -175,9 +179,9 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
     <div id="accountError" style="font-size:9px;color:#ff2a75;text-align:center;margin-top:4px;display:none">Invalid credentials</div>
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="accountLoginBtn">LOGIN</button>
-      <button class="btn btn-small" id="accountRegisterBtn" style="font-size:8px">REGISTER</button>
-      <button class="btn btn-small" id="accountLogoutBtn" style="display:none;font-size:8px">LOGOUT</button>
-      <button class="btn btn-small btn-danger" id="accountBackBtn" style="font-size:8px">BACK</button>
+      <button class="btn" id="accountRegisterBtn">REGISTER</button>
+      <button class="btn" id="accountLogoutBtn" style="display:none">LOGOUT</button>
+      <button class="btn btn-danger" id="accountBackBtn">BACK</button>
     </div>
   </div>
 
