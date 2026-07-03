@@ -2294,26 +2294,26 @@ class Game {
     if(this.difficulty==='custom'){
       const m=this.customMul;
       const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,isFinite(v)?v:lo));
-      return{speed:0.7*clamp(m.enemySpeed||100,10,500)/100,count:0.65*clamp(m.projCount||100,10,500)/100,pspeed:0.65*clamp(m.projSpeed||100,10,500)/100,bossHP:0.5*clamp(m.bossHP||100,10,500)/100,playerHP:Math.round(clamp(parseInt(m.playerHP)||3,1,20)),playerSpeed:1.15*clamp(m.playerSpeed||100,10,500)/100,psize:0.75*clamp(m.projSize||100,10,500)/100,bossRate:1.4*clamp(m.bossRate||100,10,500)/100,bossCount:0.6*clamp(m.bossCount||100,10,500)/100,extraEvents:0,chaserLifetime:6,sprinklerRate:1.5*clamp(m.sprinklerRate||100,10,500)/100,sprinklerRot:0.6*clamp(m.sprinklerRot||100,10,500)/100};
+      return{speed:0.7*clamp(m.enemySpeed||100,10,500)/100,count:0.65*clamp(m.projCount||100,10,500)/100,pspeed:0.65*clamp(m.projSpeed||100,10,500)/100,bossHP:0.5*clamp(m.bossHP||100,10,500)/100,playerHP:Math.round(clamp(parseInt(m.playerHP)||3,1,20)),playerSpeed:1.15*clamp(m.playerSpeed||100,10,500)/100,psize:0.75*clamp(m.projSize||100,10,500)/100,bossRate:1.4*clamp(m.bossRate||100,10,500)/100,bossCount:0.6*clamp(m.bossCount||100,10,500)/100,extraEvents:0,chaserLifetime:6,sprinklerRate:1.5*clamp(m.sprinklerRate||100,10,500)/100,sprinklerRot:0.6*clamp(m.sprinklerRot||100,10,500)/100,dashDist:Math.max(10,Math.min(250,clamp(m.dashDist||100,10,250)))};
     }
     if(this.difficulty==='easy')return{
       speed:0.5,count:0.45,pspeed:0.5,bossHP:0.3,playerHP:7,playerSpeed:1.3,
       psize:0.55,bossRate:1.6,bossCount:0.4,extraEvents:0,chaserLifetime:4,
-      sprinklerRate:1.8,sprinklerRot:0.4
+      sprinklerRate:1.8,sprinklerRot:0.4,dashDist:130
     };
     if(this.difficulty==='normal')return{
       speed:0.7,count:0.65,pspeed:0.65,bossHP:0.5,playerHP:5,playerSpeed:1.15,
       psize:0.75,bossRate:1.4,bossCount:0.6,extraEvents:0,chaserLifetime:6,
-      sprinklerRate:1.5,sprinklerRot:0.6
+      sprinklerRate:1.5,sprinklerRot:0.6,dashDist:100
     };
     if(this.difficulty==='nightmare')return{
       speed:1.4,count:1.7,pspeed:1.5,bossHP:2,playerHP:2,playerSpeed:0.85,
       psize:1.35,bossRate:0.55,bossCount:1.7,extraEvents:1,chaserLifetime:6,
-      sprinklerRate:0.5,sprinklerRot:1.7
+      sprinklerRate:0.5,sprinklerRot:1.7,dashDist:70
     };
     return{speed:1,count:1,pspeed:1,bossHP:1,playerHP:3,playerSpeed:1,
       psize:1,bossRate:1,bossCount:1,extraEvents:0,chaserLifetime:6,
-      sprinklerRate:1,sprinklerRot:1};
+      sprinklerRate:1,sprinklerRot:1,dashDist:85};
   }
 
   applyDifficultyModifiers(){
@@ -2450,12 +2450,12 @@ class Game {
 
     // Create players
     this.players=[];
-    const diffMul=this.getDifficultyMul();
+    this.diffMul=this.getDifficultyMul();
     const p1=new Player(0,this.getControlsForPlayer(0),'#00e5ff');
-    p1.maxHP=diffMul.playerHP;
-    p1.hp=diffMul.playerHP;
-    p1.baseSpeed=Math.round(p1.baseSpeed*diffMul.playerSpeed);
-    p1.dashSpeed=Math.round(p1.dashSpeed*Math.max(10,Math.min(250,isFinite(this.customMul.dashDist)?this.customMul.dashDist:100))/100);
+    p1.maxHP=this.diffMul.playerHP;
+    p1.hp=this.diffMul.playerHP;
+    p1.baseSpeed=Math.round(p1.baseSpeed*this.diffMul.playerSpeed);
+    p1.dashSpeed=Math.round(p1.dashSpeed*this.diffMul.dashDist/100);
     this.players.push(p1);
     // P2 added if multiplayer detected
     this.multiplayer=false;
@@ -2594,6 +2594,10 @@ class Game {
         this.multiplayer=true;
         const p2=new Player(1,this.getControlsForPlayer(1),'#ff8c00');
         p2.x=350;p2.y=500;
+        p2.maxHP=this.diffMul.playerHP;
+        p2.hp=this.diffMul.playerHP;
+        p2.baseSpeed=Math.round(p2.baseSpeed*this.diffMul.playerSpeed);
+        p2.dashSpeed=Math.round(p2.dashSpeed*this.diffMul.dashDist/100);
         this.players.push(p2);
       }
     }
@@ -2687,6 +2691,8 @@ class Game {
       this.shakeDuration-=this.dt;
       this.shakeAmplitude*=0.95;
       if(this.shakeAmplitude<0.01)this.shakeAmplitude=0;
+    }else{
+      this.shakeAmplitude=0;
     }
 
     // Bass energy

@@ -26,13 +26,13 @@ A **fan game** inspired by *Just Shapes & Beats*. Built with vanilla HTML5 Canva
 
 Five difficulty modes to choose from. Easy, Normal, and Custom are always unlocked. Hard and Nightmare unlock as you progress.
 
-| Mode | Speed | Spawns | Player HP | Color | Unlock |
-|------|-------|--------|-----------|-------|--------|
-| Easy | 70% | 70% | 7 | Green | Default |
-| Normal | 100% | 100% | 5 | Cyan | Default |
-| Hard | 140% | 150% | 3 | Orange | Beat Normal |
-| Nightmare | 200% | 260% | 2 | Purple | Beat Hard |
-| Custom | User-defined | User-defined | 1–20 | White | Always |
+| Mode | Speed | Spawns | Player HP | Dash Dist | Color | Unlock |
+|------|-------|--------|-----------|-----------|-------|--------|
+| Easy | 70% | 70% | 7 | 130% | Green | Default |
+| Normal | 100% | 100% | 5 | 100% | Cyan | Default |
+| Hard | 140% | 150% | 3 | 85% | Orange | Beat Normal |
+| Nightmare | 200% | 260% | 2 | 70% | Purple | Beat Hard |
+| Custom | User-defined | User-defined | 1–20 | User-defined | White | Always |
 
 ### Custom Difficulty
 
