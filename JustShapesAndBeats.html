@@ -2007,6 +2007,10 @@ class Game {
     this.setupUI();
     this.resizeGame();
     window.addEventListener('resize',()=>this.resizeGame());
+    // Restore persisted login
+    const savedToken=localStorage.getItem('jsab_token');
+    const savedUsername=localStorage.getItem('jsab_username');
+    if(savedToken&&savedUsername){this.authToken=savedToken;this.authUsername=savedUsername}
     this.showMenu();
     if(this.authToken)this.verifyToken();
   }
