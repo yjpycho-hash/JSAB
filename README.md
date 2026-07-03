@@ -28,10 +28,10 @@ Five difficulty modes to choose from. Easy, Normal, and Custom are always unlock
 
 | Mode | Speed | Spawns | Player HP | Color | Unlock |
 |------|-------|--------|-----------|-------|--------|
-| Easy | 71% | 69% | 7 | Green | Default |
+| Easy | 70% | 70% | 7 | Green | Default |
 | Normal | 100% | 100% | 5 | Cyan | Default |
-| Hard | 143% | 154% | 3 | Orange | Beat Normal |
-| Nightmare | 200% | 262% | 2 | Purple | Beat Hard |
+| Hard | 140% | 150% | 3 | Orange | Beat Normal |
+| Nightmare | 200% | 260% | 2 | Purple | Beat Hard |
 | Custom | User-defined | User-defined | 1–20 | White | Always |
 
 ### Custom Difficulty
