@@ -2113,7 +2113,7 @@ class Game {
         const el=document.getElementById('c'+id.charAt(0).toUpperCase()+id.slice(1));
         if(el){
           let v=parseFloat(el.value)||0;
-          if(id==='playerHP'){v=Math.max(1,Math.min(20,Math.round(v)))}else{v=Math.max(1,Math.min(1000,v))}
+          if(id==='playerHP'){v=Math.max(1,Math.min(20,Math.round(v)))}else{v=Math.max(10,Math.min(500,v))}
           this.customMul[id]=v;
           el.value=v;
         }
@@ -2503,6 +2503,7 @@ class Game {
     }
     localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
     this.saveProgressToServer();
+    const time=this.songTime;
     // White flash
     const flash=document.getElementById('flashOverlay');
     flash.style.background='#fff';
