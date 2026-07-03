@@ -54,7 +54,9 @@ All values are percentages where 100% = Hard difficulty default.
 
 ## Account System
 
-The game includes a basic username system for display purposes. Full account persistence (Turso database) is planned but **not yet active** on the static site. Progress is saved locally in your browser using `localStorage`. For the full account experience, play on the hosted version — future updates will sync progress across devices.
+Login and registration require the server to be running. Account data (completed levels, unlocked difficulties) is synced to a Turso database and persists across devices.
+- **On the website** ([jsab.onrender.com](https://jsab.onrender.com)): fully functional — sign up, log in, and your progress syncs automatically.
+- **Running locally**: auth **only works if you start the server** (`node server.js` from the `JSAB/` directory). Opening the HTML file directly will use localStorage only (no cloud sync).
 
 ## Levels
 
@@ -66,7 +68,16 @@ The game includes a basic username system for display purposes. Full account per
 
 ## How to Run Locally
 
-Open `JustShapesAndBeats.html` in any modern web browser. No server or build tools required.
+**Option 1 — HTML only (no server/offline)**  
+Open `JustShapesAndBeats.html` in any browser. Progress saves to localStorage. Account login will **not** work.
+
+**Option 2 — Full server (auth + cloud sync)**  
+```bash
+cd JSAB
+npm install
+node server.js
+```
+Then open `http://localhost:3000`. Requires Node.js.
 
 ## Controls
 
@@ -81,7 +92,8 @@ Built with:
 - HTML5 Canvas
 - Web Audio API
 - Google Fonts (Press Start 2P)
-- Turso (planned database integration)
+- Turso (database)
+- Express + @libsql/client (server)
 
 ## License
 
