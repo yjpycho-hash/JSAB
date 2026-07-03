@@ -16,7 +16,7 @@ A **fan game** inspired by *Just Shapes & Beats*. Built with vanilla HTML5 Canva
 - 5 difficulty modes: Easy, Normal, Hard, Nightmare, Custom
 - Custom difficulty: fine-tune every game parameter as percentages
 - Procedurally generated music based on BPM and melody
-- Local co-op support (plug in a second keyboard)
+- Local co-op: P1 (blue) + P2 (orange) share the screen with separate controls
 - Multiple hazard types: projectiles, beams, walls, pulsing rings, waves, chasers, sprinklers
 - Progress saved automatically (completed levels, unlocked difficulties)
 - Star indicator on beaten levels
@@ -55,8 +55,9 @@ All values are percentages where 100% = Normal difficulty default.
 
 ## Account System
 
-Login and registration require the server to be running. Account data (completed levels, unlocked difficulties) is synced to a Turso database and persists across devices.
-- **On the website** ([jsab.onrender.com](https://jsab.onrender.com)): fully functional — sign up, log in, and your progress syncs automatically.
+**Best played on the website** — the server is already running there, and your progress syncs automatically. Running the server locally is finicky and even if you do, your data won't sync with the website (they use separate databases).
+
+- **On the website** ([jsab.onrender.com](https://jsab.onrender.com)): fully functional — sign up, log in, and your progress syncs across devices automatically.
 - **Running locally**: auth **only works if you start the server** (`node server.js` from the `JSAB/` directory). Opening the HTML file directly will use localStorage only (no cloud sync).
 
 ## Levels
@@ -82,10 +83,13 @@ Then open `http://localhost:3000`. Requires Node.js.
 
 ## Controls
 
-| Action | Player 1 | Player 2 |
-|--------|----------|----------|
+| Action | Player 1 (blue) | Player 2 (orange) |
+|--------|-----------------|-------------------|
 | Move | WASD | Arrow Keys |
 | Dash | Space | Enter |
+
+### Local 2-Player
+Both players share the screen simultaneously. P1 is blue, P2 is orange. Each player has their own health bar and score. The level ends when either player dies. Plug in a second keyboard to play together.
 
 ## Credits
 
