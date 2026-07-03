@@ -50,7 +50,7 @@ Select Custom to open a settings panel where you can independently tune:
 - Sprinkler Rotation Speed (10–500%)
 - Player HP (1–20, absolute)
 
-All values are percentages where 100% = Hard difficulty default.
+All values are percentages where 100% = Normal difficulty default.
 
 ## Account System
 

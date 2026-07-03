@@ -2260,7 +2260,7 @@ class Game {
   getDifficultyMul(){
     if(this.difficulty==='custom'){
       const m=this.customMul;
-      return{speed:m.enemySpeed/100,count:m.projCount/100,pspeed:m.projSpeed/100,bossHP:m.bossHP/100,playerHP:Math.max(1,parseInt(m.playerHP)||3),playerSpeed:m.playerSpeed/100,psize:m.projSize/100,bossRate:m.bossRate/100,bossCount:m.bossCount/100,extraEvents:0,chaserLifetime:6,sprinklerRate:m.sprinklerRate/100,sprinklerRot:m.sprinklerRot/100};
+      return{speed:0.7*m.enemySpeed/100,count:0.65*m.projCount/100,pspeed:0.65*m.projSpeed/100,bossHP:0.5*m.bossHP/100,playerHP:Math.max(1,parseInt(m.playerHP)||3),playerSpeed:1.15*m.playerSpeed/100,psize:0.75*m.projSize/100,bossRate:1.4*m.bossRate/100,bossCount:0.6*m.bossCount/100,extraEvents:0,chaserLifetime:6,sprinklerRate:1.5*m.sprinklerRate/100,sprinklerRot:0.6*m.sprinklerRot/100};
     }
     if(this.difficulty==='easy')return{
       speed:0.5,count:0.45,pspeed:0.5,bossHP:0.3,playerHP:7,playerSpeed:1.3,
