@@ -201,6 +201,7 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
     </div>
     <div id="settingsError" style="font-size:9px;color:#ff2a75;text-align:center;margin-top:6px;display:none"></div>
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="settingsLogoutBtn">LOGOUT</button>
       <button class="btn btn-danger" id="settingsDeleteBtn">DELETE ACCOUNT</button>
       <button class="btn btn-danger" id="settingsBackBtn">BACK</button>
     </div>
@@ -2251,6 +2252,7 @@ class Game {
       document.getElementById('accountSettingsOverlay').classList.add('active');
     };
     document.getElementById('settingsBackBtn').onclick=()=>this.showMenu();
+    document.getElementById('settingsLogoutBtn').onclick=()=>{this.logout();this.showMenu()};
     document.getElementById('settingsChangeUsernameBtn').onclick=async()=>{
       const nu=document.getElementById('settingsNewUsername').value.trim();
       if(!nu){setErr.style.display='block';setErr.textContent='Enter a username';return}
