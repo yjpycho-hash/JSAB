@@ -2121,6 +2121,19 @@ class Game {
       this.showLevelSelect();
     };
     document.getElementById('customBackBtn').onclick=()=>this.showMenu();
+    // Clamp custom inputs on blur (when user leaves a field)
+    ['cPlayerSpeed','cProjSpeed','cProjCount','cEnemySpeed','cProjSize','cBossHP','cBossRate','cBossCount','cSprinklerRate','cSprinklerRot','cDashDist'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.onblur=function(){
+        let v=parseFloat(this.value)||0;
+        this.value=Math.max(10,Math.min(500,Math.round(v)));
+      };
+    });
+    const cHp=document.getElementById('cPlayerHP');
+    if(cHp)cHp.onblur=function(){
+      let v=parseFloat(this.value)||0;
+      this.value=Math.max(1,Math.min(20,Math.round(v)));
+    };
     // Account
     const accErr=document.getElementById('accountError');
     document.getElementById('accountBtn').onclick=()=>{
@@ -2264,7 +2277,8 @@ class Game {
   getDifficultyMul(){
     if(this.difficulty==='custom'){
       const m=this.customMul;
-      return{speed:0.7*m.enemySpeed/100,count:0.65*m.projCount/100,pspeed:0.65*m.projSpeed/100,bossHP:0.5*m.bossHP/100,playerHP:Math.max(1,parseInt(m.playerHP)||3),playerSpeed:1.15*m.playerSpeed/100,psize:0.75*m.projSize/100,bossRate:1.4*m.bossRate/100,bossCount:0.6*m.bossCount/100,extraEvents:0,chaserLifetime:6,sprinklerRate:1.5*m.sprinklerRate/100,sprinklerRot:0.6*m.sprinklerRot/100};
+      const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,isFinite(v)?v:lo));
+      return{speed:0.7*clamp(m.enemySpeed||100,10,500)/100,count:0.65*clamp(m.projCount||100,10,500)/100,pspeed:0.65*clamp(m.projSpeed||100,10,500)/100,bossHP:0.5*clamp(m.bossHP||100,10,500)/100,playerHP:Math.round(clamp(parseInt(m.playerHP)||3,1,20)),playerSpeed:1.15*clamp(m.playerSpeed||100,10,500)/100,psize:0.75*clamp(m.projSize||100,10,500)/100,bossRate:1.4*clamp(m.bossRate||100,10,500)/100,bossCount:0.6*clamp(m.bossCount||100,10,500)/100,extraEvents:0,chaserLifetime:6,sprinklerRate:1.5*clamp(m.sprinklerRate||100,10,500)/100,sprinklerRot:0.6*clamp(m.sprinklerRot||100,10,500)/100};
     }
     if(this.difficulty==='easy')return{
       speed:0.5,count:0.45,pspeed:0.5,bossHP:0.3,playerHP:7,playerSpeed:1.3,
