@@ -183,8 +183,26 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
     <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="accountLoginBtn">LOGIN</button>
       <button class="btn" id="accountRegisterBtn">REGISTER</button>
+      <button class="btn" id="accountSettingsBtn" style="display:none">ACCOUNT SETTINGS</button>
       <button class="btn" id="accountLogoutBtn" style="display:none">LOGOUT</button>
       <button class="btn btn-danger" id="accountBackBtn">BACK</button>
+    </div>
+  </div>
+
+  <div id="accountSettingsOverlay" class="overlay">
+    <div class="title" style="font-size:20px;margin-bottom:16px">ACCOUNT SETTINGS</div>
+    <div style="font-size:9px;color:#aaa;margin-bottom:12px" id="settingsUsernameDisplay"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="custom-row"><label>New Username</label><input type="text" id="settingsNewUsername" style="width:120px" maxlength="20"></div>
+      <button class="btn btn-tiny" id="settingsChangeUsernameBtn" style="font-size:8px;padding:6px 16px">CHANGE USERNAME</button>
+      <div class="custom-row" style="margin-top:6px"><label>Old Password</label><input type="password" id="settingsOldPass" style="width:120px" maxlength="30"></div>
+      <div class="custom-row"><label>New Password</label><input type="password" id="settingsNewPass" style="width:120px" maxlength="30"></div>
+      <button class="btn btn-tiny" id="settingsChangePassBtn" style="font-size:8px;padding:6px 16px">CHANGE PASSWORD</button>
+    </div>
+    <div id="settingsError" style="font-size:9px;color:#ff2a75;text-align:center;margin-top:6px;display:none"></div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-danger" id="settingsDeleteBtn">DELETE ACCOUNT</button>
+      <button class="btn btn-danger" id="settingsBackBtn">BACK</button>
     </div>
   </div>
 
@@ -2047,6 +2065,8 @@ class Game {
         this.authUsername=d.username;
         localStorage.setItem('jsab_username',d.username);
         document.getElementById('accountBtn').textContent='Signed in as '+d.username;
+        document.getElementById('accountRegisterBtn').style.display='none';
+        document.getElementById('accountSettingsBtn').style.display='inline-block';
         document.getElementById('accountLogoutBtn').style.display='inline-block';
         if(d.progress){
           if(d.progress.completedLevels)Object.assign(this.completedLevels,d.progress.completedLevels);
@@ -2061,6 +2081,8 @@ class Game {
     localStorage.removeItem('jsab_token');
     localStorage.removeItem('jsab_username');
     document.getElementById('accountBtn').textContent='Not logged in — Click to sign in';
+    document.getElementById('accountRegisterBtn').style.display='inline-block';
+    document.getElementById('accountSettingsBtn').style.display='none';
     document.getElementById('accountLogoutBtn').style.display='none';
   }
 
@@ -2156,10 +2178,25 @@ class Game {
     };
     // Account
     const accErr=document.getElementById('accountError');
+    const setErr=document.getElementById('settingsError');
+    const updateUIafterLogin=()=>{
+      document.getElementById('accountRegisterBtn').style.display='none';
+      document.getElementById('accountSettingsBtn').style.display='inline-block';
+      document.getElementById('accountLogoutBtn').style.display='inline-block';
+    };
     document.getElementById('accountBtn').onclick=()=>{
       document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));
-      document.getElementById('accountOverlay').classList.add('active');
-      accErr.style.display='none';
+      if(this.authToken){
+        document.getElementById('settingsUsernameDisplay').textContent='Signed in as '+this.authUsername;
+        document.getElementById('settingsNewUsername').value='';
+        document.getElementById('settingsOldPass').value='';
+        document.getElementById('settingsNewPass').value='';
+        setErr.style.display='none';
+        document.getElementById('accountSettingsOverlay').classList.add('active');
+      }else{
+        accErr.style.display='none';
+        document.getElementById('accountOverlay').classList.add('active');
+      }
     };
     const accountLogin=async()=>{
       const un=document.getElementById('accountUsername').value.trim();
@@ -2171,7 +2208,7 @@ class Game {
         localStorage.setItem('jsab_token',d.token);
         localStorage.setItem('jsab_username',d.username);
         document.getElementById('accountBtn').textContent='Signed in as '+d.username;
-        document.getElementById('accountLogoutBtn').style.display='inline-block';
+        updateUIafterLogin();
         if(d.progress){
           if(d.progress.completedLevels)Object.assign(this.completedLevels,d.progress.completedLevels);
           if(d.progress.unlockedLevels)Object.assign(this.unlockedLevels,d.progress.unlockedLevels);
@@ -2192,7 +2229,7 @@ class Game {
         localStorage.setItem('jsab_token',d.token);
         localStorage.setItem('jsab_username',d.username);
         document.getElementById('accountBtn').textContent='Signed in as '+d.username;
-        document.getElementById('accountLogoutBtn').style.display='inline-block';
+        updateUIafterLogin();
         if(d.progress){
           if(d.progress.completedLevels)Object.assign(this.completedLevels,d.progress.completedLevels);
           if(d.progress.unlockedLevels)Object.assign(this.unlockedLevels,d.progress.unlockedLevels);
@@ -2203,9 +2240,53 @@ class Game {
     };
     document.getElementById('accountLogoutBtn').onclick=()=>{this.logout();this.showMenu()};
     document.getElementById('accountBackBtn').onclick=()=>this.showMenu();
+    // Account settings
+    document.getElementById('accountSettingsBtn').onclick=()=>{
+      document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));
+      document.getElementById('settingsUsernameDisplay').textContent='Signed in as '+this.authUsername;
+      document.getElementById('settingsNewUsername').value='';
+      document.getElementById('settingsOldPass').value='';
+      document.getElementById('settingsNewPass').value='';
+      setErr.style.display='none';
+      document.getElementById('accountSettingsOverlay').classList.add('active');
+    };
+    document.getElementById('settingsBackBtn').onclick=()=>this.showMenu();
+    document.getElementById('settingsChangeUsernameBtn').onclick=async()=>{
+      const nu=document.getElementById('settingsNewUsername').value.trim();
+      if(!nu){setErr.style.display='block';setErr.textContent='Enter a username';return}
+      try{
+        const d=await this.apiCall('/api/change-username',{method:'POST',body:JSON.stringify({newUsername:nu})});
+        this.authToken=d.token;this.authUsername=d.username;
+        localStorage.setItem('jsab_token',d.token);
+        localStorage.setItem('jsab_username',d.username);
+        document.getElementById('accountBtn').textContent='Signed in as '+d.username;
+        document.getElementById('settingsUsernameDisplay').textContent='Signed in as '+d.username;
+        setErr.style.display='none';
+      }catch(e){setErr.style.display='block';setErr.textContent=e.message}
+    };
+    document.getElementById('settingsChangePassBtn').onclick=async()=>{
+      const op=document.getElementById('settingsOldPass').value;
+      const np=document.getElementById('settingsNewPass').value;
+      if(!op||!np){setErr.style.display='block';setErr.textContent='Fill in both fields';return}
+      try{
+        await this.apiCall('/api/change-password',{method:'POST',body:JSON.stringify({oldPassword:op,newPassword:np})});
+        document.getElementById('settingsOldPass').value='';
+        document.getElementById('settingsNewPass').value='';
+        setErr.style.display='block';setErr.style.color='#44ff66';setErr.textContent='Password changed!';
+      }catch(e){setErr.style.display='block';setErr.style.color='#ff2a75';setErr.textContent=e.message}
+    };
+    document.getElementById('settingsDeleteBtn').onclick=()=>{
+      if(confirm('Are you sure? This is permanent and cannot be undone.')){
+        this.apiCall('/api/account',{method:'DELETE'}).then(()=>{
+          this.logout();this.showMenu();
+        }).catch(e=>{setErr.style.display='block';setErr.style.color='#ff2a75';setErr.textContent=e.message});
+      }
+    };
     // Restore login state
     if(this.authToken&&this.authUsername){
       document.getElementById('accountBtn').textContent='Signed in as '+this.authUsername;
+      document.getElementById('accountRegisterBtn').style.display='none';
+      document.getElementById('accountSettingsBtn').style.display='inline-block';
       document.getElementById('accountLogoutBtn').style.display='inline-block';
     }
   }

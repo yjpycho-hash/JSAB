@@ -40,6 +40,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
@@ -118,6 +119,41 @@ app.get('/api/verify', authenticate, async (req, res) => {
   const user = result.rows[0];
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ username: req.user.username, progress: JSON.parse(user.progress || '{}') });
+});
+
+app.post('/api/change-username', authenticate, async (req, res) => {
+  const { newUsername } = req.body;
+  if (!newUsername || newUsername.length < 1 || newUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(newUsername))
+    return res.status(400).json({ error: 'Invalid username (1-20 chars, letters/numbers/underscores)' });
+  try {
+    await turso.execute({ sql: 'UPDATE users SET username = ? WHERE id = ?', args: [newUsername, req.user.id] });
+    const token = jwt.sign({ id: req.user.id, username: newUsername, token_version: req.user.token_version }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, username: newUsername });
+  } catch (e) {
+    if (e.message && e.message.includes('UNIQUE')) return res.status(400).json({ error: 'Username already taken' });
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/change-password', authenticate, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!newPassword || newPassword.length < 3) return res.status(400).json({ error: 'Password must be at least 3 characters' });
+  try {
+    const result = await turso.execute({ sql: 'SELECT password FROM users WHERE id = ?', args: [req.user.id] });
+    const user = result.rows[0];
+    if (!user || !bcrypt.compareSync(oldPassword, user.password))
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    const hash = bcrypt.hashSync(newPassword, 10);
+    await turso.execute({ sql: 'UPDATE users SET password = ? WHERE id = ?', args: [hash, req.user.id] });
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Server error' }); }
+});
+
+app.delete('/api/account', authenticate, async (req, res) => {
+  try {
+    await turso.execute({ sql: 'DELETE FROM users WHERE id = ?', args: [req.user.id] });
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Server error' }); }
 });
 
 app.listen(PORT, () => console.log('JSAB server running at http://localhost:' + PORT));
