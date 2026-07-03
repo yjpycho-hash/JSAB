@@ -2113,7 +2113,9 @@ class Game {
         const el=document.getElementById('c'+id.charAt(0).toUpperCase()+id.slice(1));
         if(el){
           let v=parseFloat(el.value)||0;
-          if(id==='playerHP'){v=Math.max(1,Math.min(20,Math.round(v)))}else{v=Math.max(10,Math.min(500,v))}
+          if(id==='playerHP'){v=Math.max(1,Math.min(20,Math.round(v)))}
+          else if(id==='dashDist'){v=Math.max(10,Math.min(250,v))}
+          else{v=Math.max(10,Math.min(500,v))}
           this.customMul[id]=v;
           el.value=v;
         }
@@ -2122,13 +2124,18 @@ class Game {
     };
     document.getElementById('customBackBtn').onclick=()=>this.showMenu();
     // Clamp custom inputs on blur (when user leaves a field)
-    ['cPlayerSpeed','cProjSpeed','cProjCount','cEnemySpeed','cProjSize','cBossHP','cBossRate','cBossCount','cSprinklerRate','cSprinklerRot','cDashDist'].forEach(id=>{
+    ['cPlayerSpeed','cProjSpeed','cProjCount','cEnemySpeed','cProjSize','cBossHP','cBossRate','cBossCount','cSprinklerRate','cSprinklerRot'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.onblur=function(){
         let v=parseFloat(this.value)||0;
         this.value=Math.max(10,Math.min(500,Math.round(v)));
       };
     });
+    const cDash=document.getElementById('cDashDist');
+    if(cDash)cDash.onblur=function(){
+      let v=parseFloat(this.value)||0;
+      this.value=Math.max(10,Math.min(250,Math.round(v)));
+    };
     const cHp=document.getElementById('cPlayerHP');
     if(cHp)cHp.onblur=function(){
       let v=parseFloat(this.value)||0;
@@ -2439,7 +2446,7 @@ class Game {
     p1.maxHP=diffMul.playerHP;
     p1.hp=diffMul.playerHP;
     p1.baseSpeed=Math.round(p1.baseSpeed*diffMul.playerSpeed);
-    p1.dashSpeed=Math.round(p1.dashSpeed*(this.customMul.dashDist/100));
+    p1.dashSpeed=Math.round(p1.dashSpeed*Math.max(10,Math.min(250,isFinite(this.customMul.dashDist)?this.customMul.dashDist:100))/100);
     this.players.push(p1);
     // P2 added if multiplayer detected
     this.multiplayer=false;

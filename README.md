@@ -48,7 +48,7 @@ Select Custom to open a settings panel where you can independently tune:
 - Boss Projectile Count (10–500%)
 - Sprinkler Spray Rate (10–500%)
 - Sprinkler Rotation Speed (10–500%)
-- Dash Distance (1–1000%)
+- Dash Distance (10–250%)
 - Player HP (1–20, absolute)
 
 All values are percentages where 100% = Normal difficulty default.
