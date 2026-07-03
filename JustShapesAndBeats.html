@@ -135,7 +135,7 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
       <b style="color:#fff">Progression</b><br>
       Beat Normal → unlock Hard → beat Hard → unlock Nightmare.<br>
       Complete a level to unlock the next one in the same tier.<br>
-      Beaten levels get a gold ★.<br><br>
+      Beaten levels get a gold ⭐.<br><br>
       <b style="color:#ffd700">Account</b><br>
       Sign in to sync progress across devices.<br>
       Requires the server — best played on the website (jsab.onrender.com).<br>
@@ -2257,7 +2257,7 @@ class Game {
       card.innerHTML=`
         <div class="name">${lv.name}</div>
         <div class="stars" style="color:${dc}">${'★'.repeat(lv.difficulty)+'☆'.repeat(5-lv.difficulty)}</div>
-        ${beaten.includes(id)?'<div class="star-beaten">★</div>':''}
+        ${beaten.includes(id)?'<div class="star-beaten">&#11088;</div>':''}
         ${unlocked?'<div style="font-size:10px;color:'+dc+'">▶ PLAY</div>':'<div class="lock">🔒</div>'}
       `;
       if(unlocked){
