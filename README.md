@@ -6,9 +6,16 @@ A **fan game** inspired by *Just Shapes & Beats*. Built with vanilla HTML5 Canva
 
 ## How to Play
 
-- **WASD** or **Arrow Keys** to move
-- **Space** to dash through hazards
-- Survive until the end of each level
+Survive until the end of each level. Dodge hazards, dash through projectiles, and don't let the beat drop you.
+
+| Action | Player 1 (blue) | Player 2 (orange) |
+|--------|-----------------|-------------------|
+| Move | WASD | Arrow Keys |
+| Dash | Space | Enter |
+| Pause | Escape | — |
+
+### Local 2-Player
+Both players share the screen simultaneously. P1 is blue, P2 is orange. Each player has their own health bar and score. The level ends when either player dies. Plug in a second keyboard to play together.
 
 ## Features
 
@@ -21,6 +28,14 @@ A **fan game** inspired by *Just Shapes & Beats*. Built with vanilla HTML5 Canva
 - Progress saved automatically (completed levels, unlocked difficulties)
 - Star indicator on beaten levels
 - Keyboard shortcuts: `Escape` to pause/resume
+
+## Levels
+
+| ID | Name | Difficulty | Boss |
+|----|------|-----------|------|
+| level1 | The Gatekeeper | ★★ | — |
+| level2 | Cascade | ★★★ | Wave Boss |
+| level3 | The Pursuit | ★★★★ | Chaser Gauntlet |
 
 ## Difficulty System
 
@@ -60,14 +75,6 @@ All values are percentages where 100% = Normal difficulty default.
 - **On the website** ([jsab.onrender.com](https://jsab.onrender.com)): fully functional — sign up, log in, and your progress syncs across devices automatically.
 - **Running locally**: auth **only works if you start the server** (`node server.js` from the `JSAB/` directory). Opening the HTML file directly will use localStorage only (no cloud sync).
 
-## Levels
-
-| ID | Name | Difficulty | Boss |
-|----|------|-----------|------|
-| level1 | The Gatekeeper | ★★ | — |
-| level2 | Cascade | ★★★ | Wave Boss |
-| level3 | The Pursuit | ★★★★ | Chaser Gauntlet |
-
 ## How to Run Locally
 
 **Option 1 — HTML only (no server/offline)**  
@@ -80,16 +87,6 @@ npm install
 node server.js
 ```
 Then open `http://localhost:3000`. Requires Node.js.
-
-## Controls
-
-| Action | Player 1 (blue) | Player 2 (orange) |
-|--------|-----------------|-------------------|
-| Move | WASD | Arrow Keys |
-| Dash | Space | Enter |
-
-### Local 2-Player
-Both players share the screen simultaneously. P1 is blue, P2 is orange. Each player has their own health bar and score. The level ends when either player dies. Plug in a second keyboard to play together.
 
 ## Credits
 
