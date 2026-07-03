@@ -2178,6 +2178,12 @@ class Game {
       this.value=Math.max(1,Math.min(20,Math.round(v)));
     };
     // Account
+    const friendlyErr=(msg)=>{
+      if(msg==='Invalid credentials')return 'Username or password is wrong, please try again';
+      if(msg==='Username already taken')return 'This username is already taken, please choose another';
+      if(msg==='User not found')return 'Account not found';
+      return msg;
+    };
     const accErr=document.getElementById('accountError');
     const setErr=document.getElementById('settingsError');
     const updateUIafterLogin=()=>{
@@ -2216,7 +2222,7 @@ class Game {
           localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
         }
         accErr.style.display='none';this.showMenu();
-      }catch(e){accErr.style.display='block';accErr.textContent=e.message}
+      }catch(e){accErr.style.display='block';accErr.textContent=friendlyErr(e.message)}
     };
     document.getElementById('accountLoginBtn').onclick=accountLogin;
     document.getElementById('accountPassword').onkeydown=e=>{if(e.key==='Enter')accountLogin()};
@@ -2237,7 +2243,7 @@ class Game {
           localStorage.setItem('jsab_progress',JSON.stringify({completedLevels:this.completedLevels,unlockedLevels:this.unlockedLevels}));
         }
         accErr.style.display='none';this.showMenu();
-      }catch(e){accErr.style.display='block';accErr.textContent=e.message}
+      }catch(e){accErr.style.display='block';accErr.textContent=friendlyErr(e.message)}
     };
     document.getElementById('accountLogoutBtn').onclick=()=>{this.logout();this.showMenu()};
     document.getElementById('accountBackBtn').onclick=()=>this.showMenu();
@@ -2264,7 +2270,7 @@ class Game {
         document.getElementById('accountBtn').textContent='Signed in as '+d.username;
         document.getElementById('settingsUsernameDisplay').textContent='Signed in as '+d.username;
         setErr.style.display='none';
-      }catch(e){setErr.style.display='block';setErr.textContent=e.message}
+      }catch(e){setErr.style.display='block';setErr.textContent=friendlyErr(e.message)}
     };
     document.getElementById('settingsChangePassBtn').onclick=async()=>{
       const op=document.getElementById('settingsOldPass').value;
@@ -2275,13 +2281,13 @@ class Game {
         document.getElementById('settingsOldPass').value='';
         document.getElementById('settingsNewPass').value='';
         setErr.style.display='block';setErr.style.color='#44ff66';setErr.textContent='Password changed!';
-      }catch(e){setErr.style.display='block';setErr.style.color='#ff2a75';setErr.textContent=e.message}
+      }catch(e){setErr.style.display='block';setErr.style.color='#ff2a75';setErr.textContent=friendlyErr(e.message)}
     };
     document.getElementById('settingsDeleteBtn').onclick=()=>{
       if(confirm('Are you sure? This is permanent and cannot be undone.')){
         this.apiCall('/api/account',{method:'DELETE'}).then(()=>{
           this.logout();this.showMenu();
-        }).catch(e=>{setErr.style.display='block';setErr.style.color='#ff2a75';setErr.textContent=e.message});
+        }).catch(e=>{setErr.style.display='block';setErr.style.color='#ff2a75';setErr.textContent=friendlyErr(e.message)});
       }
     };
     // Restore login state
