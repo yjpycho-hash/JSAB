@@ -73,6 +73,13 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
 .flash-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;opacity:0;transition:opacity 0.05s}
 .hud-dash-indicator{position:absolute;pointer-events:none}
 .hud-player-label{font-size:8px;color:#666;margin-bottom:4px}
+.touch-controls{display:none;position:absolute;bottom:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.touch-controls.active{display:block}
+.joystick-area{position:absolute;bottom:40px;left:40px;width:140px;height:140px;pointer-events:auto;touch-action:none}
+.joystick-base{position:absolute;top:50%;left:50%;width:120px;height:120px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15)}
+.joystick-thumb{position:absolute;top:50%;left:50%;width:50px;height:50px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(0,229,255,0.5);border:2px solid rgba(0,229,255,0.7);transition:none}
+.dash-btn{position:absolute;bottom:55px;right:45px;width:90px;height:90px;border-radius:50%;pointer-events:auto;touch-action:none;background:rgba(255,42,117,0.3);border:2px solid rgba(255,42,117,0.6);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.8);cursor:pointer}
+.dash-btn.active{background:rgba(255,42,117,0.6);border-color:#ff2a75;transform:scale(0.92)}
 .boss-hp-bg{position:absolute;top:16px;left:50%;transform:translateX(-50%);width:200px;height:10px;background:#333;border:1px solid #555;z-index:5}
 .boss-hp-fill{height:100%;background:#ff2a75;transition:width 0.1s}
 .boss-hp-label{position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:7px;color:#fff;text-shadow:0 0 4px #000;z-index:6;padding-top:2px}
@@ -90,6 +97,13 @@ canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%
   <div class="progress-bar" id="progressBar"></div>
   <canvas id="gameCanvas" width="800" height="600"></canvas>
   <div class="flash-overlay" id="flashOverlay"></div>
+  <div class="touch-controls" id="touchControls">
+    <div class="joystick-area" id="joystickArea">
+      <div class="joystick-base"></div>
+      <div class="joystick-thumb" id="joystickThumb"></div>
+    </div>
+    <div class="dash-btn" id="dashBtn">DASH</div>
+  </div>
   <div id="bossHpBg" class="boss-hp-bg" style="display:none"><div class="boss-hp-fill" id="bossHpFill" style="width:100%"></div></div>
   <div id="bossHpLabel" class="boss-hp-label" style="display:none">BOSS</div>
 
@@ -2013,6 +2027,7 @@ class Game {
     this.transitionAlpha=0;
     this.transitionTarget=0;
     this.dt=0;
+    this.touchInput={dx:0,dy:0,dash:false};
 
     // Create background gradient once
     this.bgGrad=this.ctx.createRadialGradient(400,300,0,400,300,400);
@@ -2100,17 +2115,72 @@ class Game {
     document.addEventListener('keyup',e=>{k[e.key]=false});
     // Also store reference for direct checking
     this.keys=k;
+
+    // Touch controls
+    this.touchInput={dx:0,dy:0,dash:false};
+    let joyTouchId=null, dashTouchId=null;
+    const joyArea=document.getElementById('joystickArea');
+    const joyThumb=document.getElementById('joystickThumb');
+    const dashBtn=document.getElementById('dashBtn');
+    const joyRect=()=>joyArea.getBoundingClientRect();
+    const updateJoy=(cx,cy)=>{
+      const r=joyRect();
+      const ox=cx-r.left-r.width/2, oy=cy-r.top-r.height/2;
+      const maxR=55;
+      const d=Math.hypot(ox,oy);
+      const clampedD=Math.min(d,maxR);
+      const nx=clampedD*(d>0?ox/d:0), ny=clampedD*(d>0?oy/d:0);
+      joyThumb.style.transform=`translate(calc(-50% + ${nx}px),calc(-50% + ${ny}px))`;
+      this.touchInput.dx=nx/maxR;
+      this.touchInput.dy=ny/maxR;
+    };
+    const resetJoy=()=>{
+      joyThumb.style.transform='translate(-50%,-50%)';
+      this.touchInput.dx=0;this.touchInput.dy=0;
+    };
+    joyArea.addEventListener('touchstart',e=>{
+      if(joyTouchId!==null)return;
+      const t=e.changedTouches[0];
+      joyTouchId=t.identifier;
+      updateJoy(t.clientX,t.clientY);
+    });
+    joyArea.addEventListener('touchmove',e=>{
+      for(let t of e.changedTouches){
+        if(t.identifier===joyTouchId){updateJoy(t.clientX,t.clientY);break}
+      }
+    });
+    const endJoy=()=>{joyTouchId=null;resetJoy()};
+    joyArea.addEventListener('touchend',e=>{
+      for(let t of e.changedTouches){
+        if(t.identifier===joyTouchId){endJoy();break}
+      }
+    });
+    joyArea.addEventListener('touchcancel',endJoy);
+    dashBtn.addEventListener('touchstart',e=>{
+      if(dashTouchId!==null)return;
+      const t=e.changedTouches[0];
+      dashTouchId=t.identifier;
+      this.touchInput.dash=true;
+      dashBtn.classList.add('active');
+    });
+    dashBtn.addEventListener('touchend',e=>{
+      for(let t of e.changedTouches){
+        if(t.identifier===dashTouchId){dashTouchId=null;this.touchInput.dash=false;dashBtn.classList.remove('active');break}
+      }
+    });
+    dashBtn.addEventListener('touchcancel',()=>{dashTouchId=null;this.touchInput.dash=false;dashBtn.classList.remove('active')});
   }
 
   getControlsForPlayer(id){
     const k=this.keys;
+    const t=this.touchInput;
     if(id===0){
       return{
-        up:k['w']||k['W'],
-        down:k['s']||k['S'],
-        left:k['a']||k['A'],
-        right:k['d']||k['D'],
-        dash:k[' ']
+        up:k['w']||k['W']||t.dy<-0.3,
+        down:k['s']||k['S']||t.dy>0.3,
+        left:k['a']||k['A']||t.dx<-0.3,
+        right:k['d']||k['D']||t.dx>0.3,
+        dash:k[' ']||t.dash
       };
     }else{
       return{
@@ -2375,6 +2445,11 @@ class Game {
     if(this.gameLoop)cancelAnimationFrame(this.gameLoop);
     document.getElementById('bossHpBg').style.display='none';
     document.getElementById('bossHpLabel').style.display='none';
+    document.getElementById('touchControls').classList.remove('active');
+  }
+
+  setTouchControls(v){
+    document.getElementById('touchControls').classList.toggle('active',v);
   }
 
   resizeGame(){
@@ -2559,6 +2634,7 @@ class Game {
     this.transitionTarget=0;
     this.lastTimestamp=performance.now();
     this.gameLoop=requestAnimationFrame(t=>this.mainLoop(t));
+    this.setTouchControls(true);
   }
 
   pause(){
@@ -2566,6 +2642,7 @@ class Game {
     this.state='PAUSED';
     this.audio.suspend();
     document.getElementById('pauseOverlay').classList.add('active');
+    this.setTouchControls(false);
   }
 
   resume(){
@@ -2573,6 +2650,7 @@ class Game {
     this.state='PLAYING';
     this.audio.resume();
     document.getElementById('pauseOverlay').classList.remove('active');
+    this.setTouchControls(true);
   }
 
   quitToMenu(){
@@ -2599,11 +2677,13 @@ class Game {
     this.audio.stop();
     document.getElementById('gameOverStats').textContent=`Deaths: ${this.deathCount}`;
     document.getElementById('gameOverOverlay').classList.add('active');
+    this.setTouchControls(false);
   }
 
   handleLevelComplete(){
     this.state='LEVEL_COMPLETE';
     this.audio.stop();
+    this.setTouchControls(false);
     const diff=this.difficulty;
     if(diff!=='custom'){
       const cl=this.completedLevels[diff];
