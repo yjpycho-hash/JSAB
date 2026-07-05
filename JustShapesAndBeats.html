@@ -2028,6 +2028,7 @@ class Game {
     this.transitionTarget=0;
     this.dt=0;
     this.touchInput={dx:0,dy:0,dash:false};
+    this.isTouchDevice='ontouchstart' in window||navigator.maxTouchPoints>0;
 
     // Create background gradient once
     this.bgGrad=this.ctx.createRadialGradient(400,300,0,400,300,400);
@@ -2449,6 +2450,7 @@ class Game {
   }
 
   setTouchControls(v){
+    if(!this.isTouchDevice)return;
     document.getElementById('touchControls').classList.toggle('active',v);
   }
 
